@@ -57,6 +57,12 @@
     "titanium": "^5.0.6"
   },
   "node-circleci-autorelease": {
+    "machine": {
+      "timezone": "Asia/Tokyo",
+      "node": {
+        "version": "4.2.6"
+      }
+    },
     "config": {
       "git-user-name": "CircleCI",
       "git-user-email": "circleci@cureapp.jp",
