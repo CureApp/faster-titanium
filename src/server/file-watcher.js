@@ -20,7 +20,6 @@ export default class FileWatcher extends EventEmitter {
         super()
 
         this.projDir = projDir
-        this.building = false
 
         const watcher = chokidar.watch(this.dirs, { persistent: true, ignoreInitial: true })
 
