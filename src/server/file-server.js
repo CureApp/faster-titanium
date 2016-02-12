@@ -101,9 +101,9 @@ export default class FileServer extends EventEmitter {
         if (url === '/second-entry-after-faster-titanium.js') {
             url = '/app.js'
         }
-        let responder = new ResourceResponder(this.projDir, url)
+        let responder = new ResourceResponder(this.projDir, url, platform)
         if (!responder.exists) {
-            responder = new ResourceResponder(this.projDir, url, platform)
+            responder = new ResourceResponder(this.projDir, url)
         }
         const { statusCode, contentType } = responder.header
 

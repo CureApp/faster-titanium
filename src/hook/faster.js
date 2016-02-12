@@ -7,7 +7,7 @@ import MainProcess from '../server/main-process'
  * attach cli hooks to titanium CLI
  * this function must be named "init"
  *
- * ti build --faster [--port1 4157] [--port2 4156]
+ * ti build --faster [--faster-port1 4157] [--faster-port2 4156]
  * @public
  */
 export function init(logger, config, cli) {
@@ -59,15 +59,13 @@ export function modifyEntryName(data) {
     const [src, dist] = data.args
     const isAppJS = ['', 'android', 'ipad', 'iphone', 'ios']
         .map(name => join(projectDir, 'Resources', name, 'app.js'))
-        .some(path => this.logger.info(path) || src === path)
+        .some(path => src === path)
 
     if (!isAppJS) return;
 
     const newname = 'second-entry-after-faster-titanium.js'
 
-    this.logger.info(`[FasterTitanium] Renaming original app.js to ${newname}`)
-
-    this.logger.warn(`modifyEntryName ${newname}`)
+    this.logger.info(`[FasterTitanium] Renaming original ${src} to ${newname}`)
 
     data.args[1] = join(dirname(dist), newname) // modify distination
 
