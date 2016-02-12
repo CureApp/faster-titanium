@@ -6,6 +6,8 @@ import MainProcess from '../server/main-process'
 /**
  * attach cli hooks to titanium CLI
  * this function must be named "init"
+ *
+ * ti build --faster [--port1 4157] [--port2 4156]
  * @public
  */
 export function init(logger, config, cli) {
@@ -20,11 +22,9 @@ export function init(logger, config, cli) {
     const hooks = {
 
         'build.android.config': scope::attachFasterFlag,
+        'build.ios.config'    : scope::attachFasterFlag,
 
-        'build.ios.config': scope::attachFasterFlag,
-
-        'build.ios.copyResource': { pre: scope::modifyEntryName },
-
+        'build.ios.copyResource'    : { pre: scope::modifyEntryName },
         'build.android.copyResource': { pre: scope::modifyEntryName },
 
         'build.post.compile': scope::launchServer
@@ -99,9 +99,12 @@ export function createAppJS(dist) {
 }
 
 /**
- * launch file/event server to communicate with App
+ * launch file/event servers to communicate with App
  */
 export function launchServer(data) {
+
+    const { 'project-dir': projectDir, faster } = this.cli.argv
+    if (!faster) return;
 
     const { 'faster-port1': fPort, 'faster-port2': ePort } = this.cli.argv
 
@@ -110,12 +113,15 @@ export function launchServer(data) {
         ePort: parseInt(ePort, 10),
         host : this.host
     }
-    const {projectDir} = data
 
     new MainProcess(projectDir, optsForServer).start()
 }
 
 
+/**
+ * @returns {string} IP Adress (v4)
+ * @private (export for test)
+ */
 export function getAddress() {
 
     const interfaces = os.networkInterfaces();
