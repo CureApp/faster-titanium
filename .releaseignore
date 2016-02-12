@@ -1,6 +1,7 @@
 node_modules
 .editorconfig
 spec
+test
 src
 .releaseignore
 .gitignore
@@ -8,3 +9,4 @@ src
 circle.yml
 npm-debug.log
 esdoc.json
+.babelrc
