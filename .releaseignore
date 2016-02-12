@@ -1,0 +1,10 @@
+node_modules
+.editorconfig
+spec
+src
+.releaseignore
+.gitignore
+.bmp.yml
+circle.yml
+npm-debug.log
+esdoc.json

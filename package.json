@@ -13,7 +13,16 @@
     "bundle": "browserify dist/titanium/faster-titanium.js --outfile dist/app1.js",
     "launch-app": "ti build -p ios --faster --project-dir test/faster-titanium-app",
     "ti-dev": "browserify src/titanium/faster-titanium.js --babelify --outfile dist/app1.js",
-    "server-dev": "DEBUG=faster-titanium:* nodemon -w src/server --exec babel-node -- src/server/main-process.js"
+    "server-dev": "DEBUG=faster-titanium:* nodemon -w src/server --exec babel-node -- src/server/main-process.js",
+    "bmp": "cc-bmp",
+    "bmp-p": "cc-bmp -p",
+    "bmp-m": "cc-bmp -m",
+    "bmp-j": "cc-bmp -j",
+    "circle": "cc-generate-yml",
+    "post-dependencies": "echo post-dependencies",
+    "pre-release": "npm run build && npm run bundle",
+    "post-release": "echo post-release",
+    "gh-pages": "esdoc -c esdoc.json"
   },
   "repository": {
     "type": "git",
@@ -42,8 +51,19 @@
     "esdoc-es7-plugin": "0.0.3",
     "espower-babel": "^4.0.1",
     "mocha": "^2.4.5",
+    "node-circleci-autorelease": "^1.5.11",
     "nodemon": "^1.8.1",
     "power-assert": "^1.2.0",
     "titanium": "^5.0.6"
+  },
+  "node-circleci-autorelease": {
+    "config": {
+      "git-user-name": "CircleCI",
+      "git-user-email": "circleci@cureapp.jp",
+      "version-prefix": "v",
+      "create-branch": false,
+      "create-gh-pages": true,
+      "gh-pages-dir": "doc"
+    }
   }
 }
