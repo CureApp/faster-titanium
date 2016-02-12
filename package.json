@@ -10,9 +10,8 @@
   "scripts": {
     "test": "mocha --compilers js:espower-babel/guess spec/**/*.spec.js",
     "build": "babel src -d dist",
-    "bundle": "browserify dist/titanium/faster-titanium.js --outfile dist/app1.js",
+    "bundle": "browserify dist/titanium/faster-titanium.js --outfile dist/app.js",
     "launch-app": "ti build -p ios --faster --project-dir test/faster-titanium-app",
-    "ti-dev": "browserify src/titanium/faster-titanium.js --babelify --outfile dist/app1.js",
     "server-dev": "DEBUG=faster-titanium:* nodemon -w src/server --exec babel-node -- src/server/main-process.js",
     "bmp": "cc-bmp",
     "bmp-p": "cc-bmp -p",
