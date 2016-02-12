@@ -38,6 +38,7 @@ export default class MainProcess {
         this.watcher.on('change', path => ::this.broadcastReload)
         this.watcher.on('change:alloy', ::this.compileAlloy)
         this.fServer.on('got-kill-message', ::this.end)
+        this.fServer.on('got-reload-message', ::this.broadcastReload)
     }
 
 

@@ -68,12 +68,9 @@ export default class FileServer extends EventEmitter {
             const url = urlParser(req.url).pathname
             ____(`url: ${url}`)
 
-            if (url === '/') {
-                return this.responseServerInfo(res)
-            }
-            if (url === '/kill') {
-                return this.emitKilled(res)
-            }
+            if (url === '/')       return this.responseServerInfo(res)
+            if (url === '/kill')   return this.emitKilled(res)
+            if (url === '/reload') return this.emitReload(res)
 
             return this.responseResource(req, res)
 
@@ -145,10 +142,21 @@ export default class FileServer extends EventEmitter {
     /**
      * terminates server
      * @param {http.ServerResponse} res
+     * @emits {got-kill-message}
      */
     emitKilled(res) {
         this.respond(res, 200, 'text/plain', 'Server will be terminated');
         this.emit('got-kill-message')
+    }
+
+
+    /**
+     * @emits {got-reload-message}
+     * @param {http.ServerResponse} res
+     */
+    emitReload(res) {
+        this.respond(res, 200, 'text/plain', 'Apps will be reloaded');
+        this.emit('got-reload-message')
     }
 
 }
