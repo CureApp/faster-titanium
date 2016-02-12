@@ -103,10 +103,12 @@ export function createAppJS(dist) {
  */
 export function launchServer(data) {
 
-    const { 'project-dir': projectDir, faster } = this.cli.argv
+    const { faster,
+            'project-dir': projectDir,
+            'faster-port1': fPort,
+            'faster-port2': ePort } = this.cli.argv
     if (!faster) return;
 
-    const { 'faster-port1': fPort, 'faster-port2': ePort } = this.cli.argv
 
     const optsForServer = {
         fPort: parseInt(fPort, 10),
