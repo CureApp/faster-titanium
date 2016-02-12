@@ -8,9 +8,9 @@
     "test": "spec"
   },
   "scripts": {
-    "build": "nodemon -w src --exec 'babel src -d dist'",
+    "build": "babel src/{server|hook} -d dist",
     "app-dev": "nodemon -w src/titanium --exec 'npm run bundle && npm run build-app'",
-    "build-app": "ti build -p ios --project-dir test/faster-titanium-app",
+    "build-app": "ti build -p ios --faster --project-dir test/faster-titanium-app",
     "bundle": "browserify src/titanium/faster-titanium.js -t babelify --outfile dist/app.js",
     "test": "mocha --compilers js:espower-babel/guess spec/**/*.spec.js",
     "server-dev": "DEBUG=faster-titanium:* nodemon -w src/server --exec babel-node -- src/server/main-process.js"
@@ -36,6 +36,7 @@
     "babelify": "^7.2.0",
     "browserify": "^13.0.0",
     "esdoc": "^0.4.4",
+    "esdoc-es7-plugin": "0.0.3",
     "espower-babel": "^4.0.1",
     "mocha": "^2.4.5",
     "nodemon": "^1.8.1",
