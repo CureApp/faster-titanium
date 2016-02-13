@@ -20,7 +20,7 @@ export default class EventServer extends EventEmitter {
         this.port = port
         this.host = host
         this.sockets = []
-        this.server = net.createServer(::this.addClient);
+        this.server = net.createServer(::this.addClient)
         this.server.on('error', err => ___x(err) || this.emit('error', err))
     }
 
@@ -42,8 +42,9 @@ export default class EventServer extends EventEmitter {
      */
     close() {
         ____(`terminating...`)
+        this.sockets.forEach(socket => socket.destroy())
         return P(y => this.server.close(y)).then(x =>{
-            ____(`closed`)
+            ____(`terminated`)
         })
     }
 
