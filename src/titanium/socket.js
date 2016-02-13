@@ -6,35 +6,84 @@ export default class Socket {
 
         const { host, port } = options
 
-        this.dataListener = null
+        this.host = host
+        this.port = port
+        this.dataListener  = null
+        this.errorListener = null
+        this.proxy = this.createTCPSocket()
+    }
 
-        this.proxy = Ti.Network.Socket.createTCP({
-            host: host,
-            port: port,
 
-            connected: (v) => {
-
-                Ti.Stream.pump(v.socket, e => {
-                    this.dataListener && this.dataListener('' + e.buffer)
-                }, 1024, true)
-            },
-
-            error: (e) => {
-                console.log(e)
-            }
-        })
-
+    /**
+     * connect to TCP server
+     */
+    connect() {
         this.proxy.connect()
     }
 
 
-    onData(fn) {
-        if (typeof fn === 'function') {
-            this.dataListener = fn
-        }
+    /**
+     * reconnect to TCP server
+     */
+    reconnect() {
+        this.end()
+        delete this.proxy
+        this.proxy = this.createTCPSocket()
+        this.connect()
     }
 
+
+    /**
+     * create socket proxy for TCP connection
+     */
+    createTCPSocket() {
+        return Ti.Network.Socket.createTCP({
+            host: this.host,
+            port: this.port,
+
+            connected: (v) => {
+
+                Ti.Stream.pump(v.socket, e => {
+                    // end signal
+                    if (!e.buffer) {
+                        return this.closeListener && this.closeListener()
+                    }
+                    this.dataListener && this.dataListener('' + e.buffer)
+                }, 1024, true)
+            },
+
+            error: (e) => this.errorListener && this.errorListener(e)
+        })
+    }
+
+    /**
+     * set listener of data event
+     * @param {function} fn
+     */
+    onData(fn) {
+        if (typeof fn === 'function') this.dataListener = fn
+    }
+
+    /**
+     * set listener of close event
+     * @param {function} fn
+     */
+    onClose(fn) {
+        if (typeof fn === 'function') this.closeListener = fn
+    }
+
+    /**
+     * set listener of error event
+     * @param {function} fn
+     */
+    onError(fn) {
+        if (typeof fn === 'function') this.errorListener = fn
+    }
+
+    /**
+     * close socket
+     */
     end() {
-        this.proxy.close()
+        try { this.proxy.close() } catch (e) {}
     }
 }
