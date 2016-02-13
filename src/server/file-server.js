@@ -25,11 +25,22 @@ export default class FileServer extends EventEmitter {
     constructor(projDir, port = 4157, host = '127.0.0.1') {
         super()
 
+        /** @type {string} */
         this.projDir = projDir
-        this.port    = parseInt(port, 10)
-        this.host    = host
-        this.server  = http.createServer(::this.onRequest)
+
+        /** @type {number} */
+        this.port = parseInt(port, 10)
+
+        /** @type {string} */
+        this.host = host
+
+        /** @type {net.Socket[]} */
+        this.sockets = []
+
+        /** @type {http.Server} */
+        this.server = http.createServer(::this.onRequest)
         this.server.on('error', err => ___x(err) || this.emit('error', err))
+        this.server.on('connection', socket => this.sockets.push(socket))
     }
 
 
@@ -52,8 +63,9 @@ export default class FileServer extends EventEmitter {
      */
     close() {
         ____(`terminating...`)
-        return P(y => this.server.close(y) && y()).then(x => { // TODO this.server.close() doesn't call the given callback.
-            ____(`closed`)
+        this.sockets.forEach(socket => socket.destroy())
+        return P(y => this.server.close(y)).then(x => {
+            ____(`terminated`)
         })
     }
 
