@@ -1,16 +1,18 @@
 
 import Module from './module'
 import Http from './http'
-const ____ = (v) => console.log('[Faster-Titanium:RequireAgent]', v)
+const ____ = (v, type = 'log') => console[type]('[FasterTitanium:RequireAgent]', v)
 
 export default class RequireAgent {
 
     /**
+     * @param {function} original (titanium) require function
      * @param {string} host
      * @param {number} port
      * @param {string} platform
      */
-    constructor(host, port, platform) {
+    constructor(origRequire, host, port, platform) {
+        this.origRequire = origRequire
         this.modules = {}
         this.timeout = 10000
 
