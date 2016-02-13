@@ -21,10 +21,18 @@ export default class FileWatcher extends EventEmitter {
 
         this.projDir = projDir
 
-        const watcher = chokidar.watch(this.dirs, { persistent: true, ignoreInitial: true })
+        this.watcher = chokidar.watch(this.dirs, { persistent: true, ignoreInitial: true })
 
-        watcher.on('change', ::this.onChange)
-        watcher.on('error', path => ___x(path) || this.emit('error', path))
+        this.watcher.on('change', ::this.onChange)
+        this.watcher.on('error', path => ___x(path) || this.emit('error', path))
+    }
+
+    /**
+     * stop watching
+     */
+    close() {
+        this.watcher.close()
+        ____(`watch stopped`)
     }
 
 
