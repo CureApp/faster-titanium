@@ -1,6 +1,6 @@
 import {join, resolve, dirname} from 'path'
 import os from 'os'
-import fs from 'fs'
+import { writeFileSync as write, readFileSync as read } from 'fs'
 import MainProcess from '../server/main-process'
 
 /**
@@ -86,14 +86,14 @@ export function createAppJS(dist) {
         ePort: parseInt(ePort, 10),
         host : this.host
     }
-    const codeToRun = `Ti.FasterTitanium.run(${JSON.stringify(optsForFasterTi)})`
+    const codeToRun = `(function(g){Ti.FasterTitanium.run(g, ${JSON.stringify(optsForFasterTi)})})(this)`
 
     const appJSPath = resolve(__dirname, '../../dist/app.js')
-    const appJSCode = [fs.readFileSync(appJSPath, 'utf8'), codeToRun].join('\n')
+    const appJSCode = [ read(appJSPath, 'utf8'), codeToRun ].join('\n')
 
     this.logger.info(`[FasterTitanium] Creating new app.js with host: ${this.host}, fPort: ${fPort}, ePort: ${ePort}`)
 
-    fs.writeFileSync(dist, appJSCode)
+    write(dist, appJSCode)
 }
 
 /**
