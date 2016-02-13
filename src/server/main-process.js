@@ -93,16 +93,14 @@ export default class MainProcess {
     }
 
     /**
-     * terminate this process
+     * close servers and stop watching
      */
     end() {
         ____(`terminating servers`)
         Promise.all([
             this.fServer.close(),
-            this.eServer.close()
-        ]).then( results => {
-            ____(`terminating process`)
-            process.exit(0)
-        }).catch(___x)
+            this.eServer.close(),
+            this.watcher.close()
+        ])
     }
 }
