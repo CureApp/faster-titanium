@@ -31,13 +31,25 @@ export default class RequireAgent {
         if (this.modules[moduleName]) {
             return this.modules[moduleName].exports
         }
-        const source = this.getServerSource(moduleName)
+
+        let source
+        try {
+            source = this.getServerSource(moduleName)
+        }
+        catch (e) {
+            console.warn(`Couldn't fetch module ${moduleName} from HTTP server. Use local file.`)
+            try {
+                source = this.getLocalSource(moduleName)
+            }
+            catch (e) {
+                console.warn(`Couldn't fetch module ${moduleName} from file system. Use original require.`)
+                return this.origRequire(moduleName)
+            }
+        }
         const mod = this.createModule(moduleName, source)
         this.modules[moduleName] = mod
-
         return mod.exports
     }
-
 
     /**
      * @param {string} rawModuleName
@@ -65,16 +77,32 @@ export default class RequireAgent {
 
     /**
      * @param {string} moduleName
-     * @returns {object}
+     * @returns {string} js code
      */
     getServerSource(moduleName) {
 
         const url = `http://${this.host}:${this.port}/${moduleName}.js`
-        ____(`access to ${url}`)
+        ____(`\tremote access: ${url}`)
 
         return Http.get(url, {
             timeout: this.timeout,
             header: { 'x-platform': this.platform }
         })
     }
+
+    /**
+     * @param {string} moduleName
+     * @returns {string} js code
+     */
+    getLocalSource(moduleName) {
+
+        ____(`\tfile access: ${moduleName}`)
+
+        if (moduleName === 'app') moduleName = 'second-entry-after-faster-titanium'
+
+        const file = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory, moduleName + '.js')
+
+        return file.read().text;
+    }
+
 }
