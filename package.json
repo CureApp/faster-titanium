@@ -3,7 +3,6 @@
   "version": "1.3.0",
   "description": "faster Titanium",
   "main": "index.js",
-  "private": true,
   "directories": {
     "test": "spec"
   },
