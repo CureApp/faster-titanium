@@ -6,8 +6,12 @@ import './ti-shim'
 
 describe('FasterTitanium', ()=> {
 
-    it('is available without error', ()=> {
+    before(() => {
+        FasterTitanium.run(global)
+    })
 
-        FasterTitanium.run()
+    it('sets instance of FasterTitanium to FasterTitanium.instance', ()=> {
+
+        assert(FasterTitanium.instance instanceof FasterTitanium)
     })
 })
