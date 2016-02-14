@@ -43,6 +43,8 @@ export default class Socket {
 
             connected: (v) => {
 
+                this.connectionListener && this.connectionListener()
+
                 Ti.Stream.pump(v.socket, e => {
                     // end signal
                     if (!e.buffer) {
@@ -70,6 +72,14 @@ export default class Socket {
      */
     onClose(fn) {
         if (typeof fn === 'function') this.closeListener = fn
+    }
+
+    /**
+     * set listener of connection event
+     * @param {function} fn
+     */
+    onConnection(fn) {
+        if (typeof fn === 'function') this.connectionListener = fn
     }
 
     /**

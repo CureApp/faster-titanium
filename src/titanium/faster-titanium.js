@@ -44,6 +44,7 @@ export default class FasterTitanium {
 
         /** @type {Socket} file server URL */
         this.socket = new Socket({host: host, port: parseInt(ePort, 10)})
+        this.socket.onConnection(x => ____(`Connection established to ${host}:${ePort}`))
         this.socket.onData(::this.reload)
         this.socket.onClose(x => alert('[FasterTitanium] TCP server is terminated.'))
         this.socket.onError(::this.socketError)
