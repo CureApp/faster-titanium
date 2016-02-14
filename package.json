@@ -8,6 +8,7 @@
     "test": "spec"
   },
   "scripts": {
+    "postinstall": "node dist/bin/install.js",
     "test": "mocha --compilers js:espower-babel/guess spec/**/*.spec.js",
     "build": "babel src -d dist",
     "bundle": "browserify dist/titanium/faster-titanium.js --outfile dist/app.js",
