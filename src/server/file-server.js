@@ -2,11 +2,13 @@
 
 import { resolve } from 'path'
 import debug from 'debug'
-import fs from 'fs'
+import { readFileSync as read } from 'fs'
 import http from 'http'
 import { parse as urlParser } from 'url'
-import ResourceResponder from './resource-responder'
 import {EventEmitter} from 'events'
+
+import ResourceResponder from './resource-responder'
+import AppJsConverter from './app-js-converter'
 
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:FileServer')
@@ -104,19 +106,29 @@ export default class FileServer extends EventEmitter {
 
         if (url === '/app.js') {
             const fasterTiPath = resolve(__dirname, '../../dist/app.js')
-            return this.respond(res, 200, 'text/plain', fs.readFileSync(fasterTiPath))
+            return this.respond(res, 200, 'text/plain', read(fasterTiPath))
         }
 
         if (url === '/second-entry-after-faster-titanium.js') {
             url = '/app.js'
         }
+
         let responder = new ResourceResponder(this.projDir, url, platform)
         if (!responder.exists) {
             responder = new ResourceResponder(this.projDir, url)
         }
         const { statusCode, contentType } = responder.header
+        let content = responder.content
 
-        this.respond(res, statusCode, contentType, responder.content)
+        /**
+         * In the app.js, top variables are exported as global variables.
+         * Thus, AppJsConverter converts the code as such.
+         */
+        if (url === '/app.js') {
+            content = new AppJsConverter(content).convert()
+        }
+
+        this.respond(res, statusCode, contentType, content)
     }
 
 
