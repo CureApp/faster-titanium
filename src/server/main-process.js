@@ -1,15 +1,14 @@
 "use strict";
 
-import {exec} from 'child_process'
-import {relative, resolve} from 'path'
 import debug from 'debug'
 import FileServer from './file-server'
 import FileWatcher from './file-watcher'
 import EventServer from './event-server'
-const P = f => new Promise(f)
+import AlloyCompiler from './alloy-compiler'
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = debug('faster-titanium:MainProcess:error')
-const ___o = v => ____(v) || v
+
+const wait = t => new Promise(y => setTimeout(y, t))
 
 
 /**
@@ -20,37 +19,46 @@ export default class MainProcess {
     /**
      * @param {string} projDir
      * @param {Object} [options={}]
+     * @param {number} [options.minIntervalSec=3] minimum interval seconds to broadcast
      */
     constructor(projDir, options = {}) {
 
-        const { fPort, ePort, host } = options
+        const { fPort, ePort, host, minIntervalSec } = options
 
-        this.alloyCompiling = false
+        this.lastBroadcast = 0
 
+        this.minIntervalSec = parseInt(minIntervalSec, 10) || 3
         this.fServer = new FileServer(projDir, fPort, host)
         this.watcher = new FileWatcher(projDir)
         this.eServer = new EventServer(ePort, host)
+        this.compiler = new AlloyCompiler(projDir)
 
         this.fServer.on('error', ___x)
         this.eServer.on('error', ___x)
         this.watcher.on('error', ___x)
 
-        this.watcher.on('change', ::this.broadcastReload)
+        this.watcher.on('change', (path) => ____(`changed: ${path}`) || this.broadcastReload())
         this.watcher.on('change:alloy', ::this.compileAlloy)
         this.fServer.on('got-kill-message', ::this.end)
         this.fServer.on('got-reload-message', ::this.broadcastReload)
     }
 
+    /** @type {number} */
+    get timeToBroadcast() {
+        const time = new Date().getTime()
+        return Math.max(0, this.lastBroadcast + this.minIntervalSec * 1000 - time)
+    }
 
     /**
      * send reload message to all connected clients
-     * @param {string} path
      */
-    broadcastReload(path) {
-        if (this.alloyCompiling) return; // suppress broadcasting while compiling alloy.
+    broadcastReload() {
+        if (this.timeToBroadcast > 0) {
+            return ____(`Broadcasting suppressed. Available in ${this.timeToBroadcast} msec.`)
+        }
 
-        ____(`changed: ${path}`)
-        this.eServer.broadcast({event: 'reload', path: path})
+        this.eServer.broadcast({event: 'reload'})
+        this.lastBroadcast = new Date().getTime()
     }
 
 
@@ -61,22 +69,18 @@ export default class MainProcess {
      */
     compileAlloy(path) {
 
-        this.alloyCompiling = true
-
         ____(`changed:alloy ${path}`)
-        const alloy = resolve(__dirname, '../../node_modules/.bin/alloy')
 
-        const relPath = relative(this.watcher.projDir, path)
+        this.watcher.unwatchResources()
 
-        Promise.all(['ios', 'android']
-            .map (os => `${alloy} compile --config platform=${os},file=${relPath}`)
-            .map(___o)
-            .map(command => P(y => exec(command, y)))
-        )
+        this.compiler.compile(path)
+
+        .then(x => wait(this.timeToBroadcast))
         .then(x => {
-            this.alloyCompiling = false
             this.broadcastReload(path)
+            this.watcher.watchResources()
         })
+        .catch(___x)
     }
 
 
