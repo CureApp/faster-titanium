@@ -1,10 +1,8 @@
+var windowCreator = require('./lib/window-creator');
 //
 // create base UI tab and root window
 //
-var win1 = Titanium.UI.createWindow({
-    title:'Tab 1',
-    backgroundColor:'#fff'
-});
+var win1 = windowCreator('Tab 1');
 
 var tab1 = Titanium.UI.createTab({
     icon:'KS_nav_views.png',

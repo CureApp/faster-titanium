@@ -12,12 +12,26 @@ export default class RequireAgent {
      * @param {string} platform
      */
     constructor(origRequire, host, port, platform) {
+
+        /** @type {function(moduleName: string):Object} */
         this.origRequire = origRequire
+
+        /** @type {Map<string, Module>} */
         this.modules = {}
+
+        /** @type {number} */
         this.timeout = 10000
 
+        /** @type {number} */
         this.host = host
+
+        /** @type {number} */
+        this.host = host
+
+        /** @type {number} */
         this.port = parseInt(port, 10)
+
+        /** @type {string} iphone|android */
         this.platform = platform
     }
 
@@ -52,11 +66,23 @@ export default class RequireAgent {
     }
 
     /**
+     * require module after resolving relative path, stripping extension
      * @param {string} rawModuleName
+     * @param {Module} moduleFrom module where this method is called
      * @returns {object}
      */
-    requireRaw(rawModuleName) {
-        const moduleName = rawModuleName
+    requireRaw(rawModuleName, moduleFrom) {
+
+        let moduleName = rawModuleName
+
+        // resolve relative path
+        if (moduleName.match(/^\./)) {
+            moduleName = relativePath(moduleFrom.moduleName, moduleName)
+        }
+
+        if (moduleName.match(/\.js$/)) {
+            moduleName = moduleName.slice(0, -3)
+        }
         return this.require(moduleName)
     }
 
@@ -66,10 +92,10 @@ export default class RequireAgent {
      * @param {string} source
      */
     createModule(moduleName, source) {
-        const mod = new Module()
+        const mod = new Module(moduleName)
 
-        const fn = Function('exports, require, module', source);
-        fn(mod.exports, (v => this.requireRaw(v)), mod)
+        const fn = Function('exports, require, module', source)
+        fn(mod.exports, (v => this.requireRaw(v, mod)), mod)
 
         return mod
     }
@@ -104,5 +130,36 @@ export default class RequireAgent {
 
         return file.read().text;
     }
+}
 
+
+/**
+ * @param {string} from
+ * @param {string} to
+ * @private (export for test)
+ */
+export function relativePath(from, to) {
+
+    const fromNodes = from.split('/')
+    fromNodes.pop()
+
+    const toNodes = to.split('/')
+
+    for (let i in toNodes) {
+        let toNode = toNodes[i]
+        switch (toNode) {
+            case '..':
+                if (fromNodes.length === 0) {
+                    throw new Error(`cannot resolve relative path. from: ${from}, to: ${to}`)
+                }
+                fromNodes.pop()
+                break
+            case '.':
+                break
+            default:
+                fromNodes.push(toNode)
+                break
+        }
+    }
+    return fromNodes.join('/')
 }
