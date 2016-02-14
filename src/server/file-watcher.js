@@ -21,12 +21,29 @@ export default class FileWatcher extends EventEmitter {
 
         this.projDir = projDir
 
-        this.watcher = chokidar.watch(this.dirs, { persistent: true, ignoreInitial: true })
+        this.watcher = chokidar.watch(this.dirs, { ignoreInitial: true })
 
         ____(`start watching directories: ${this.dirs.join(', ')}`)
 
         this.watcher.on('change', ::this.onChange)
         this.watcher.on('error', path => ___x(path) || this.emit('error', path))
+    }
+
+
+    /**
+     * unwatch Resources dir (called in alloy compilation)
+     */
+    unwatchResources() {
+        ____(`unwatching Resources dir`)
+        this.watcher.unwatch(join(this.projDir, 'Resources'))
+    }
+
+    /**
+     * (resume) watching Resources dir
+     */
+    watchResources() {
+        ____(`restart watching Resources dir`)
+        this.watcher.add(join(this.projDir, 'Resources'))
     }
 
     /**

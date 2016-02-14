@@ -2,6 +2,9 @@
 
 import { join }  from 'path'
 import { existsSync as exists, readFileSync as read } from 'fs'
+import debug from 'debug'
+const ____ = debug('faster-titanium:ResourceResponder')
+const ___x = debug('faster-titanium:ResourceResponder:error')
 
 /**
  * Get contents of Titanium Resources
@@ -31,6 +34,7 @@ export default class ResourceResponder {
     /** @type {Buffer} */
     get content() {
         if (this.exists) {
+            ____(`path: ${this.path}`)
             return read(this.path) // TODO cache results
         }
         return `404 Not Found. path = ${this.path}`
