@@ -127,7 +127,7 @@ export function getAddress() {
     const interfaces = os.networkInterfaces();
 
     for (let k in interfaces) {
-        const itf = interfaces[k]
+        let itf = interfaces[k]
         for (let j in itf) {
             if (itf[j].family === 'IPv4' && !itf[j].internal) {
                 return itf[j].address
