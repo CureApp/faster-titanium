@@ -8,8 +8,8 @@
     "test": "spec"
   },
   "scripts": {
-    "postinstall": "node dist/bin/install.js",
-    "preuninstall": "node dist/bin/uninstall.js",
+    "postinstall": "node bin/install.js",
+    "preuninstall": "node bin/uninstall.js",
     "test": "mocha --compilers js:espower-babel/guess spec/**/*.spec.js",
     "build": "babel src -d dist",
     "bundle": "browserify dist/titanium/faster-titanium.js --outfile dist/app.js",
