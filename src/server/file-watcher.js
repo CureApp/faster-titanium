@@ -23,6 +23,8 @@ export default class FileWatcher extends EventEmitter {
 
         this.watcher = chokidar.watch(this.dirs, { persistent: true, ignoreInitial: true })
 
+        ____(`start watching directories: ${this.dirs.join(', ')}`)
+
         this.watcher.on('change', ::this.onChange)
         this.watcher.on('error', path => ___x(path) || this.emit('error', path))
     }

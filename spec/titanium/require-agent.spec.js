@@ -1,6 +1,7 @@
 
 import assert from 'power-assert'
 import RequireAgent from '../../src/titanium/require-agent'
+import {relativePath} from '../../src/titanium/require-agent'
 
 describe('RequireAgent', ()=> {
 
@@ -89,6 +90,46 @@ describe('RequireAgent', ()=> {
             const cachedResult = reqAgent.require('shinout-module')
             assert(counter === 1)
             assert(cachedResult === 'shinout-module')
+        })
+
+
+    })
+    describe('relativePath', ()=> {
+
+        it('resolves relative path with ./', ()=> {
+            const absPath = relativePath('alloy/controller/index', './constants')
+            assert(absPath === 'alloy/controller/constants')
+        })
+
+        it('resolves relative path with a ../', ()=> {
+            const absPath = relativePath('alloy/controller/index', '../constants')
+            assert(absPath === 'alloy/constants')
+        })
+
+
+        it('resolves relative path which ends with /', ()=> {
+            const absPath = relativePath('alloy/controller/index', '../constants/')
+            assert(absPath === 'alloy/constants/')
+        })
+
+        it('resolves relative path with ./s and ../s', ()=> {
+            const absPath = relativePath('alloy/controller/index', '../././constants')
+            assert(absPath === 'alloy/constants')
+        })
+
+        it('resolves relative path with many ../s', ()=> {
+            const absPath = relativePath('alloy/controller/index', '../../constants')
+            assert(absPath === 'constants')
+        })
+
+        it('cannot resolve relative path when fromPath contains too many ../s', ()=> {
+            try {
+                const absPath = relativePath('alloy/controller/index', '../../../constants')
+                throw new Error('')
+            }
+            catch (e) {
+                assert(e.message === `cannot resolve relative path. from: alloy/controller/index, to: ../../../constants`)
+            }
         })
 
 
