@@ -37,6 +37,7 @@
   "engines": {
     "node": ">=0.12"
   },
+  "preferGlobal": true,
   "dependencies": {
     "acorn": "^3.0.2",
     "alloy": "^1.7.33",
