@@ -81,7 +81,7 @@ export function createAppJS(dist) {
         ePort: parseInt(ePort, 10),
         host : this.host
     }
-    const codeToRun = `(function(g){Ti.FasterTitanium.run(g, ${JSON.stringify(optsForFasterTi)})})(this)`
+    const codeToRun = `Ti.FasterTitanium.run(this, ${JSON.stringify(optsForFasterTi)})`
 
     const appJSPath = resolve(__dirname, '../../dist/app.js')
     const appJSCode = [ read(appJSPath, 'utf8'), codeToRun ].join('\n')
