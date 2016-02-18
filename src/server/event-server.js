@@ -65,7 +65,12 @@ export default class EventServer extends EventEmitter {
      */
     broadcast(payload = {}) {
         ____(`broadcasting payload: ${JSON.stringify(payload)}`)
-        this.updateSockets().forEach(socket => {
+
+        this.updateSockets()
+
+        ____(`total clients: ${this.sockets.length}`)
+
+        this.sockets.forEach(socket => {
             socket.write(JSON.stringify(payload))
         })
     }
