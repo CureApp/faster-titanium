@@ -2,6 +2,7 @@
 import {exec} from 'child_process'
 import {relative, resolve} from 'path'
 import debug from 'debug'
+import optimizeAlloy from './optimize-alloy'
 const alloyPath = resolve(__dirname, '../../node_modules/.bin/alloy')
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:AlloyCompiler')
@@ -61,10 +62,18 @@ export default class AlloyCompiler {
 
     /**
      * @return {Promise}
-     * @todo specific compilation
+     * @todo change deploytype by input
      */
     compileAlloyJS() {
-        return this.compileAll()
+
+        return this.compileFiles(this.alloyJSPath).then(() => {
+
+            const relPath = relative(this.projDir, this.alloyJSPath)
+
+            this.platforms.forEach(os => {
+                optimizeAlloy(this.projDir, relPath, {platform: os, deploytype: 'development'})
+            })
+        })
     }
 
     /**
@@ -72,7 +81,7 @@ export default class AlloyCompiler {
      * @todo specific compilation
      */
     compileConfig() {
-        return this.compileAll()
+        return this.compileAlloyJS()
     }
 
     /**
@@ -93,6 +102,7 @@ export default class AlloyCompiler {
 
     /**
      * compile all files
+     * @deprecated
      */
     compileAll() {
         return Promise.all(
