@@ -12,12 +12,7 @@ import MainProcess from '../server/main-process'
  */
 export function init(logger, config, cli) {
 
-    const scope = {
-        logger: logger,
-        config: config,
-        cli   : cli,
-        host  : getAddress()
-    }
+    const scope = { logger, config, cli, host: getAddress() }
 
     const hooks = {
 
