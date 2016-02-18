@@ -108,12 +108,12 @@ export default class FasterTitanium {
         this.socket.end()
 
         try {
-            ____('reloading app');
-            Ti.App._restart();
+            ____('reloading app')
+            Ti.App._restart()
         }
         catch(e) {
-            ____('reloading App via legacy method');
-            this.reqAgent.require('app');
+            ____('reloading App via legacy method')
+            this.reqAgent.require('app')
         }
     }
 }
