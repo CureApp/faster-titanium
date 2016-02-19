@@ -92,6 +92,7 @@ export default class FileServer extends EventEmitter {
             if (url === '/info')   return this.responseServerInfo(res)
             if (url === '/kill')   return this.emitKilled(res)
             if (url === '/reload') return this.emitReload(res)
+            if (url.match(/^\/faster-titanium-web-js\//)) return this.responseWebJS(url, res)
 
             return this.responseResource(req, res)
 
@@ -166,6 +167,12 @@ export default class FileServer extends EventEmitter {
         const data = this.getInfo()
 
         this.respond(res, 200, 'application/json', JSON.stringify(data))
+    }
+
+    responseWebJS(url, res) {
+        const jsName = url.slice('/faster-titanium-web-js/'.length)
+        const jsPath = resolve(__dirname, '../../dist/web', jsName)
+        this.respond(res, 200, 'text/javascript', read(jsPath))
     }
 
 
