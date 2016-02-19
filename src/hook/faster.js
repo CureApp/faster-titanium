@@ -132,7 +132,17 @@ export function launchServer(data) {
         host : this.host
     }
 
-    new MainProcess(projectDir, optsForServer).start()
+    new MainProcess(projectDir, optsForServer)
+        .start()
+        .then(x => {
+            console.log(`
+
+                Access to FasterTitanium Web UI
+                http://${this.host}:${fPort}/
+
+            `)
+        })
+
 }
 
 
