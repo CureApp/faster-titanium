@@ -17,7 +17,13 @@ import { isAppJS } from '../util'
  */
 export function init(logger, config, cli) {
 
+
     const scope = { logger, config, cli, host: getAddress() }
+
+    if (scope::multiplyRegistered()) {
+        logger.warn(`[FasterTitanium] hook registration duplicated. Suppressed one: ${__filename}`)
+        return;
+    }
 
     const hooks = {
 
@@ -149,3 +155,12 @@ export function getAddress() {
     return 'localhost'
 }
 
+
+/**
+ * check duplication of hook registration
+ */
+export function multiplyRegistered() {
+    const registered = !!this.config['faster-titanium']
+    this.config['faster-titanium'] = true
+    return registered
+}
