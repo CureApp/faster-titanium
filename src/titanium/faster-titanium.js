@@ -8,7 +8,7 @@ const ____ = (v, type = 'log') => console[type]('[FasterTitanium]', v)
 export default class FasterTitanium {
 
     /**
-     * create instance of FasterTitanium and initialize app
+     * create instance of FasterTitanium and start app
      * @param {Object} g global object of Titanium environment
      * @param {Object} options
      * @param {number} [options.fPort=4157] port number of file server
@@ -18,7 +18,7 @@ export default class FasterTitanium {
     static run(g, options = {}) {
         const ft = new FasterTitanium(g, options)
         FasterTitanium.instance = ft
-        ft.init()
+        ft.startApp()
     }
 
 
@@ -51,11 +51,11 @@ export default class FasterTitanium {
     }
 
     /**
-     * connect to event server and begin app
+     * connect to event server and begin app with the given code
      */
-    init() {
+    startApp() {
         this.socket.connect()
-        this.reqAgent.require('second-entry-after-faster-titanium')
+        this.reqAgent.require('app')
     }
 
 
@@ -112,10 +112,9 @@ export default class FasterTitanium {
             Ti.App._restart()
         }
         catch(e) {
-            ____('reloading App via legacy method')
+            ____('reload')
+            this.reqAgent.clearCache()
             this.reqAgent.require('app')
         }
     }
 }
-
-if (typeof Ti !== 'undefined') Ti.FasterTitanium = FasterTitanium

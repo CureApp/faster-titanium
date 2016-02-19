@@ -104,15 +104,6 @@ export default class FileServer extends EventEmitter {
         let url = urlParser(req.url).pathname
         const platform  = req.headers['x-platform'] || 'iphone'
 
-        if (url === '/app.js') {
-            const fasterTiPath = resolve(__dirname, '../../dist/app.js')
-            return this.respond(res, 200, 'text/plain', read(fasterTiPath))
-        }
-
-        if (url === '/second-entry-after-faster-titanium.js') {
-            url = '/app.js'
-        }
-
         let responder = new ResourceResponder(this.projDir, url, platform)
         if (!responder.exists) {
             responder = new ResourceResponder(this.projDir, url)

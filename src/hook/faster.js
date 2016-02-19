@@ -1,6 +1,10 @@
 import {join, resolve, dirname} from 'path'
 import os from 'os'
-import { writeFileSync as write, readFileSync as read } from 'fs'
+import { writeFileSync as write,
+         readFileSync as read,
+         readdirSync as readDir,
+         existsSync as exists,
+         mkdirSync as mkdir } from 'fs'
 import MainProcess from '../server/main-process'
 
 /**
@@ -19,8 +23,8 @@ export function init(logger, config, cli) {
         'build.android.config': scope::attachFasterFlag,
         'build.ios.config'    : scope::attachFasterFlag,
 
-        'build.ios.copyResource'    : { pre: scope::modifyEntryName },
-        'build.android.copyResource': { pre: scope::modifyEntryName },
+        'build.ios.copyResource'    : { pre: scope::renameAppJS },
+        'build.android.copyResource': { pre: scope::renameAppJS },
 
         'build.post.compile': scope::launchServer
     }
@@ -44,52 +48,67 @@ export function attachFasterFlag(data) {
 
 
 /**
- * app.js => second-entry-after-faster-titanium.js
+ * 1. rename app.js => original-app.js
+ * 2. write new app.js
+ * 3. require faster-titanium and run in app.js
  * @private (export for test)
  */
-export function modifyEntryName(data) {
-    const { 'project-dir': projectDir, faster } = this.cli.argv
+export function renameAppJS(data) {
+    const { faster, 'project-dir': projectDir } = this.cli.argv
     if (!faster) return;
 
-    const [src, dist] = data.args
+    const [src, dest] = data.args
+
     const isAppJS = ['', 'android', 'ipad', 'iphone', 'ios']
         .map(name => join(projectDir, 'Resources', name, 'app.js'))
         .some(path => src === path)
-
     if (!isAppJS) return;
 
-    const newname = 'second-entry-after-faster-titanium.js'
+    const destDir = dirname(dest)
 
-    this.logger.info(`[FasterTitanium] Renaming original ${src} to ${newname}`)
+    this.logger.info(`[FasterTitanium] rename app.js into original-app.js`)
+    data.args[1] = destDir + '/original-app.js'
 
-    data.args[1] = join(dirname(dist), newname) // modify distination
+    this::writeNewAppJS(dest)
+    this::addFasterTitanium(destDir)
+}
 
-    this::createAppJS(dist)
+/**
+ * write new app.js
+ */
+function writeNewAppJS(dest) {
+
+    const { 'faster-port1': fPort, 'faster-port2': ePort } = this.cli.argv
+    const opts = JSON.stringify({
+        fPort: parseInt(fPort, 10),
+        ePort: parseInt(ePort, 10),
+        host : this.host
+    })
+
+    this.logger.info(`[FasterTitanium] call faster-titanium with host: ${this.host}, fPort: ${fPort}, ePort: ${ePort} in app.js`)
+
+    const newAppJS = `require('faster-titanium/index').run(this, ${opts})`
+    write(dest, newAppJS)
 }
 
 
 /**
- * faster-titanium => app.js
+ * copy dist/titanium/* => (dest-dir)/faster-titanium/*
  * @private (export for test)
  */
-export function createAppJS(dist) {
+export function addFasterTitanium(destDir) {
+    const srcDir = resolve(__dirname, '../../', 'dist/titanium')
+    destDir += '/faster-titanium'
+    if (!exists(destDir)) { mkdir(destDir) }
+    this.logger.warn(destDir)
 
-    const { 'faster-port1': fPort, 'faster-port2': ePort } = this.cli.argv
-
-    const optsForFasterTi = {
-        fPort: parseInt(fPort, 10),
-        ePort: parseInt(ePort, 10),
-        host : this.host
-    }
-    const codeToRun = `Ti.FasterTitanium.run(this, ${JSON.stringify(optsForFasterTi)})`
-
-    const appJSPath = resolve(__dirname, '../../dist/app.js')
-    const appJSCode = [ read(appJSPath, 'utf8'), codeToRun ].join('\n')
-
-    this.logger.info(`[FasterTitanium] Creating new app.js with host: ${this.host}, fPort: ${fPort}, ePort: ${ePort}`)
-
-    write(dist, appJSCode)
+    readDir(srcDir).forEach(file => {
+        this.logger.info(`[FasterTitanium] add faster-titanium/${file}`)
+        write(join(destDir, file), read(join(srcDir, file)))
+    })
 }
+
+
 
 /**
  * launch file/event servers to communicate with App
