@@ -124,11 +124,21 @@ export default class RequireAgent {
 
         ____(`\tfile access: ${moduleName}`)
 
-        if (moduleName === 'app') moduleName = 'second-entry-after-faster-titanium'
+        if (moduleName === 'app') moduleName = 'original-app'
 
         const file = Ti.Filesystem.getFile(Ti.Filesystem.resourcesDirectory, moduleName + '.js')
 
         return file.read().text;
+    }
+
+
+    /**
+     * clear all module caches
+     */
+    clearCache() {
+        for (key in this.modules) {
+            delete this.modules[key]
+        }
     }
 }
 

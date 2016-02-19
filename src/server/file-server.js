@@ -24,7 +24,7 @@ export default class FileServer extends EventEmitter {
      * @param {number} [port=4157]
      * @param {string} [host=127.0.0.1]
      */
-    constructor(projDir, port = 4157, host = '127.0.0.1') {
+    constructor(projDir, port = 4157, host = '127.0.0.1', getInfo) {
         super()
 
         /** @type {string} */
@@ -38,6 +38,12 @@ export default class FileServer extends EventEmitter {
 
         /** @type {net.Socket[]} */
         this.sockets = []
+
+        /** @type {string} code of app.js */
+        this.appJSCode = null
+
+        /** @type {function}:object function returning server info */
+        this.getInfo = getInfo
 
         /** @type {http.Server} */
         this.server = http.createServer(::this.onRequest)
@@ -82,7 +88,8 @@ export default class FileServer extends EventEmitter {
             const url = urlParser(req.url).pathname
             ____(`url: ${url}`)
 
-            if (url === '/')       return this.responseServerInfo(res)
+            if (url === '/')       return this.webUI(res)
+            if (url === '/info')   return this.responseServerInfo(res)
             if (url === '/kill')   return this.emitKilled(res)
             if (url === '/reload') return this.emitReload(res)
 
@@ -104,15 +111,6 @@ export default class FileServer extends EventEmitter {
         let url = urlParser(req.url).pathname
         const platform  = req.headers['x-platform'] || 'iphone'
 
-        if (url === '/app.js') {
-            const fasterTiPath = resolve(__dirname, '../../dist/app.js')
-            return this.respond(res, 200, 'text/plain', read(fasterTiPath))
-        }
-
-        if (url === '/second-entry-after-faster-titanium.js') {
-            url = '/app.js'
-        }
-
         let responder = new ResourceResponder(this.projDir, url, platform)
         if (!responder.exists) {
             responder = new ResourceResponder(this.projDir, url)
@@ -123,14 +121,41 @@ export default class FileServer extends EventEmitter {
         /**
          * In the app.js, top variables are exported as global variables.
          * Thus, AppJsConverter converts the code as such.
+         * Caches the result.
          */
         if (url === '/app.js') {
-            content = new AppJsConverter(content).convert()
+            if (this.appJSCode) {
+                content = this.appJSCode
+            }
+            else {
+                content = new AppJsConverter(content).convert()
+                this.appJSCode = content
+                ____(`cache app.js`)
+            }
         }
 
         this.respond(res, statusCode, contentType, content)
     }
 
+    /**
+     * clear cache of app.js
+     */
+    clearAppJSCache() {
+        ____(`clear cache of app.js`)
+        this.appJSCode = null
+    }
+
+
+    /**
+     * return HTML web UI
+     * @param {http.ServerResponse} res
+     */
+    webUI(res) {
+
+        const html = read(__dirname + '/../../web/index.html')
+
+        this.respond(res, 200, 'text/html', html)
+    }
 
     /**
      * responses server info
@@ -138,10 +163,7 @@ export default class FileServer extends EventEmitter {
      */
     responseServerInfo(res) {
 
-        const data = {
-            projDir: this.projDir,
-            uptime: process.uptime()
-        }
+        const data = this.getInfo()
 
         this.respond(res, 200, 'application/json', JSON.stringify(data))
     }
