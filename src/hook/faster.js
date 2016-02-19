@@ -6,6 +6,7 @@ import { writeFileSync as write,
          existsSync as exists,
          mkdirSync as mkdir } from 'fs'
 import MainProcess from '../server/main-process'
+import { isAppJS } from '../util'
 
 /**
  * attach cli hooks to titanium CLI
@@ -59,10 +60,7 @@ export function renameAppJS(data) {
 
     const [src, dest] = data.args
 
-    const isAppJS = ['', 'android', 'ipad', 'iphone', 'ios']
-        .map(name => join(projectDir, 'Resources', name, 'app.js'))
-        .some(path => src === path)
-    if (!isAppJS) return;
+    if (!isAppJS(projectDir, src)) return;
 
     const destDir = dirname(dest)
 

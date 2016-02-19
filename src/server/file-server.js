@@ -39,6 +39,9 @@ export default class FileServer extends EventEmitter {
         /** @type {net.Socket[]} */
         this.sockets = []
 
+        /** @type {string} code of app.js */
+        this.appJSCode = null
+
         /** @type {http.Server} */
         this.server = http.createServer(::this.onRequest)
         this.server.on('error', err => ___x(err) || this.emit('error', err))
@@ -114,12 +117,28 @@ export default class FileServer extends EventEmitter {
         /**
          * In the app.js, top variables are exported as global variables.
          * Thus, AppJsConverter converts the code as such.
+         * Caches the result.
          */
         if (url === '/app.js') {
-            content = new AppJsConverter(content).convert()
+            if (this.appJSCode) {
+                content = this.appJSCode
+            }
+            else {
+                content = new AppJsConverter(content).convert()
+                this.appJSCode = content
+                ____(`cache app.js`)
+            }
         }
 
         this.respond(res, statusCode, contentType, content)
+    }
+
+    /**
+     * clear cache of app.js
+     */
+    clearAppJSCache() {
+        ____(`clear cache of app.js`)
+        this.appJSCode = null
     }
 
 

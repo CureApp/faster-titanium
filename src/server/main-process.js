@@ -5,6 +5,8 @@ import FileServer from './file-server'
 import FileWatcher from './file-watcher'
 import EventServer from './event-server'
 import AlloyCompiler from './alloy-compiler'
+import { isAppJS } from '../util'
+
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = debug('faster-titanium:MainProcess:error')
 
@@ -25,22 +27,73 @@ export default class MainProcess {
 
         const { fPort, ePort, host, minIntervalSec } = options
 
+        /** @type {string} project dir */
+        this.projDir = projDir
+
+        /** @type {number} unix time(msec) of last broadcast*/
         this.lastBroadcast = 0
 
+        /** @type {number} minimum interval to broadcast */
         this.minIntervalSec = parseInt(minIntervalSec, 10) || 3
-        this.fServer = new FileServer(projDir, fPort, host)
-        this.watcher = new FileWatcher(projDir)
+
+        /** @type {FileServer} */
+        this.fServer = new FileServer(this.projDir, fPort, host)
+
+        /** @type {FileWatcher} */
+        this.watcher = new FileWatcher(this.projDir)
+
+        /** @type {EventServer} */
         this.eServer = new EventServer(ePort, host)
-        this.compiler = new AlloyCompiler(projDir)
+
+        /** @type {AlloyCompiler} */
+        this.compiler = new AlloyCompiler(this.projDir)
+
+        this.registerListeners()
+    }
+
+
+    /**
+     * register event listeners.
+     * called only once in constructor
+     * @private
+     */
+    registerListeners() {
 
         this.fServer.on('error', ___x)
         this.eServer.on('error', ___x)
         this.watcher.on('error', ___x)
 
-        this.watcher.on('change', (path) => ____(`changed: ${path}`) || this.broadcastReload())
-        this.watcher.on('change:alloy', ::this.compileAlloy)
+        this.watcher.on('change', ::this.onResourceFileChanged)
+        this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
         this.fServer.on('got-kill-message', ::this.end)
         this.fServer.on('got-reload-message', ::this.broadcastReload)
+    }
+
+
+    /**
+     * start fileserver and eventserver
+     * @return {Promise}
+     * @public
+     */
+    start() {
+        ____(`starting servers`)
+        return Promise.all([
+            this.fServer.listen(),
+            this.eServer.listen()
+        ]).catch(___x)
+    }
+
+    /**
+     * close servers and stop watching
+     * @public
+     */
+    end() {
+        ____(`terminating servers`)
+        Promise.all([
+            this.fServer.close(),
+            this.eServer.close(),
+            this.watcher.close()
+        ])
     }
 
     /** @type {number} */
@@ -50,7 +103,35 @@ export default class MainProcess {
     }
 
     /**
+     * called when files in Resources directory changed
+     * @param {string} path
+     * @private
+     */
+    onResourceFileChanged(path) {
+        ____(`changed: ${path}`)
+
+        if (isAppJS(this.projDir, path)) {
+            this.fServer.clearAppJSCache()
+        }
+        this.broadcastReload()
+    }
+
+    /**
+     * called when files in app directory (Alloy project) changed
+     * @param {string} path
+     * @private
+     */
+    onAlloyFileChanged(path) {
+        if (path === this.projDir + '/app/alloy.js') {
+            this.fServer.clearAppJSCache()
+        }
+
+        this.compileAlloy(path)
+    }
+
+    /**
      * send reload message to all connected clients
+     * @private
      */
     broadcastReload() {
         if (this.timeToBroadcast > 0) {
@@ -66,6 +147,7 @@ export default class MainProcess {
      * compile alloy when one of the files in alloy changes
      * @param {string} path
      * @todo support for non-ios|android OS
+     * @private
      */
     compileAlloy(path) {
 
@@ -75,36 +157,11 @@ export default class MainProcess {
 
         this.compiler.compile(path)
 
-        .then(x => wait(this.timeToBroadcast))
-        .then(x => {
-            this.broadcastReload(path)
-            this.watcher.watchResources()
-        })
-        .catch(___x)
-    }
-
-
-    /**
-     * start fileserver and eventserver
-     * @return {Promise}
-     */
-    start() {
-        ____(`starting servers`)
-        return Promise.all([
-            this.fServer.listen(),
-            this.eServer.listen()
-        ]).catch(___x)
-    }
-
-    /**
-     * close servers and stop watching
-     */
-    end() {
-        ____(`terminating servers`)
-        Promise.all([
-            this.fServer.close(),
-            this.eServer.close(),
-            this.watcher.close()
-        ])
+            .then(x => wait(this.timeToBroadcast))
+            .then(x => {
+                this.broadcastReload(path)
+                this.watcher.watchResources()
+            })
+            .catch(___x)
     }
 }
