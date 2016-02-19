@@ -29,22 +29,14 @@ export default class MainProcess {
 
         /** @type {string} project dir */
         this.projDir = projDir
-
-        /** @type {number} unix time(msec) of last broadcast*/
-        this.lastBroadcast = 0
-
-        /** @type {number} minimum interval to broadcast */
-        this.minIntervalSec = parseInt(minIntervalSec, 10) || 3
-
+        /** @type {number} @private */
+        this.reservedBroadcasts = 0
         /** @type {FileServer} */
         this.fServer = new FileServer(this.projDir, fPort, host)
-
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
-
         /** @type {EventServer} */
         this.eServer = new EventServer(ePort, host)
-
         /** @type {AlloyCompiler} */
         this.compiler = new AlloyCompiler(this.projDir)
 
@@ -96,11 +88,6 @@ export default class MainProcess {
         ])
     }
 
-    /** @type {number} */
-    get timeToBroadcast() {
-        const time = new Date().getTime()
-        return Math.max(0, this.lastBroadcast + this.minIntervalSec * 1000 - time)
-    }
 
     /**
      * called when files in Resources directory changed
@@ -125,22 +112,41 @@ export default class MainProcess {
         if (path === this.projDir + '/app/alloy.js') {
             this.fServer.clearAppJSCache()
         }
+
         ____(`changed:alloy ${path}`)
 
-        this.compileAlloy(path)
+        this.willBroadcast(this.compileAlloy(path).catch(___x))
     }
 
     /**
+     * broadcast
+     */
+    willBroadcast(promise) {
+        this.reservedBroadcasts++
+        return promise.then(x => {
+            this.reservedBroadcasts--
+            return this.broadcastReload(0)
+        })
+    }
+
+
+    /**
      * send reload message to all connected clients
+     * @return {Promise}
      * @private
      */
-    broadcastReload() {
-        if (this.timeToBroadcast > 0) {
-            return ____(`Broadcasting suppressed. Available in ${this.timeToBroadcast} msec.`)
-        }
+    broadcastReload(duration = 1000) {
 
-        this.eServer.broadcast({event: 'reload'})
-        this.lastBroadcast = new Date().getTime()
+        this.reservedBroadcasts++
+
+        return wait(duration).then(x => {
+            this.reservedBroadcasts--
+            ____("this.reservedBroadcasts", this.reservedBroadcasts)
+
+            if (this.reservedBroadcasts > 0) { return; }
+
+            this.eServer.broadcast({event: 'reload'})
+        })
     }
 
 
@@ -154,13 +160,7 @@ export default class MainProcess {
 
         this.watcher.unwatchResources()
 
-        this.compiler.compile(path)
-
-            .then(x => wait(this.timeToBroadcast))
-            .then(x => {
-                this.broadcastReload(path)
-                this.watcher.watchResources()
-            })
-            .catch(___x)
+        return this.compiler.compile(path)
+            .then(x => this.watcher.watchResources())
     }
 }
