@@ -32,7 +32,7 @@ export default class MainProcess {
         /** @type {number} @private */
         this.reservedBroadcasts = 0
         /** @type {FileServer} */
-        this.fServer = new FileServer(this.projDir, fPort, host)
+        this.fServer = new FileServer(this.projDir, fPort, host, ::this.getInfo)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
         /** @type {EventServer} */
@@ -162,5 +162,15 @@ export default class MainProcess {
 
         return this.compiler.compile(path)
             .then(x => this.watcher.watchResources())
+    }
+
+
+    getInfo() {
+        return {
+            'Project Root'   : this.projDir,
+            'Connections'    : this.eServer.updateSockets().length,
+            'Process Uptime' : process.uptime() + ' [sec]'
+            //'Reloaded Times' : this.stats.reloadedTimes
+        }
     }
 }

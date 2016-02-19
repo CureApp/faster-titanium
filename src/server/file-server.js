@@ -24,7 +24,7 @@ export default class FileServer extends EventEmitter {
      * @param {number} [port=4157]
      * @param {string} [host=127.0.0.1]
      */
-    constructor(projDir, port = 4157, host = '127.0.0.1') {
+    constructor(projDir, port = 4157, host = '127.0.0.1', getInfo) {
         super()
 
         /** @type {string} */
@@ -41,6 +41,9 @@ export default class FileServer extends EventEmitter {
 
         /** @type {string} code of app.js */
         this.appJSCode = null
+
+        /** @type {function}:object function returning server info */
+        this.getInfo = getInfo
 
         /** @type {http.Server} */
         this.server = http.createServer(::this.onRequest)
@@ -160,10 +163,7 @@ export default class FileServer extends EventEmitter {
      */
     responseServerInfo(res) {
 
-        const data = {
-            projDir: this.projDir,
-            uptime: process.uptime()
-        }
+        const data = this.getInfo()
 
         this.respond(res, 200, 'application/json', JSON.stringify(data))
     }
