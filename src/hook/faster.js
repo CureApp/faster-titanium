@@ -17,7 +17,6 @@ import { isAppJS } from '../util'
  */
 export function init(logger, config, cli) {
 
-
     const scope = { logger, config, cli, host: getAddress() }
 
     if (scope::multiplyRegistered()) {
@@ -170,7 +169,9 @@ export function getAddress() {
  * check duplication of hook registration
  */
 export function multiplyRegistered() {
-    const registered = !!this.config['faster-titanium']
-    this.config['faster-titanium'] = true
-    return registered
+    const index = this.config.paths.hooks
+        .filter(path => path.match(/faster-titanium\/dist\/hook\/faster\.js$/))
+        .indexOf(__filename)
+
+    return index > 0
 }
