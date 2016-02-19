@@ -85,7 +85,8 @@ export default class FileServer extends EventEmitter {
             const url = urlParser(req.url).pathname
             ____(`url: ${url}`)
 
-            if (url === '/')       return this.responseServerInfo(res)
+            if (url === '/')       return this.webUI(res)
+            if (url === '/info')   return this.responseServerInfo(res)
             if (url === '/kill')   return this.emitKilled(res)
             if (url === '/reload') return this.emitReload(res)
 
@@ -141,6 +142,17 @@ export default class FileServer extends EventEmitter {
         this.appJSCode = null
     }
 
+
+    /**
+     * return HTML web UI
+     * @param {http.ServerResponse} res
+     */
+    webUI(res) {
+
+        const html = read(__dirname + '/../../web/index.html')
+
+        this.respond(res, 200, 'text/html', html)
+    }
 
     /**
      * responses server info

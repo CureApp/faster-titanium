@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#reload-btn {
+    width: 200px;
+    margin: 30px auto;
+}
+
+#reload-btn>a {
+    cursor: pointer;
+    display: inline-block;
+    width: 200px;
+    height: 54px;
+    text-align: center;
+    text-decoration: none;
+    line-height: 54px;
+    outline: none;
+}
+#reload-btn>a:before,
+#reload-btn>a:after {
+    position: absolute;
+    z-index: -1;
+    display: block;
+    content: '';
+}
+#reload-btn>a,
+#reload-btn>a:before,
+#reload-btn>a::after {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-transition: all .3s;
+    transition: all .3s;
+}
+#reload-btn>a {
+    background-color: #333;
+    color: #fff;
+}
+#reload-btn>a:hover {
+    background-color: #59b1eb;
+}
+</style>
+</head>
+<script>
+
+function wait(msec) {
+    return new Promise(function(y) {
+        setTimeout(y, msec)
+    })
+}
+
+
+function showInfo() {
+    fetch('/info').then(function(res) {
+        return res.json()
+    })
+    .then(function(json) {
+        document.getElementById('appInfo').innerText = JSON.stringify(json)
+    })
+}
+
+function reload() {
+    disableButton()
+    fetch('/reload').then(function(res) {
+        return res.text()
+    })
+    .then(function(text) {
+        document.getElementById('appInfo').innerText = 'Now Reloading...'
+        return wait(1500)
+    })
+    .then(showInfo)
+}
+
+function disableButton() {
+    // TODO
+}
+
+window.addEventListener('load', showInfo)
+</script>
+<body>
+<pre id="appInfo"></pre>
+<div id="reload-btn"><a onClick="reload()">Reload App</a></div>
+</body>
+</html>
