@@ -125,6 +125,7 @@ export default class MainProcess {
         if (path === this.projDir + '/app/alloy.js') {
             this.fServer.clearAppJSCache()
         }
+        ____(`changed:alloy ${path}`)
 
         this.compileAlloy(path)
     }
@@ -150,8 +151,6 @@ export default class MainProcess {
      * @private
      */
     compileAlloy(path) {
-
-        ____(`changed:alloy ${path}`)
 
         this.watcher.unwatchResources()
 
