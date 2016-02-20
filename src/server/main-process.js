@@ -20,23 +20,29 @@ export default class MainProcess {
     /**
      * @param {string} projDir
      * @param {Object} [options={}]
+     * @param {number} fPort port number of the file server
+     * @param {number} ePort port number of the event server
+     * @param {string} host host name or IP Address
+     * @param {string} platform platform name (ios|android|mobileweb|windows)
      */
     constructor(projDir, options = {}) {
 
-        const { fPort, ePort, host } = options
+        const { fPort, ePort, host, platform } = options
 
         /** @type {string} project dir */
         this.projDir = projDir
+        /** @type {string} platform os name of the Titanium App */
+        this.platform = platform
         /** @type {Preferences} */
         this.prefs = new Preferences()
         /** @type {FileServer} */
-        this.fServer = new FileServer(this.projDir, fPort, host, ::this.getInfo)
+        this.fServer = new FileServer(this.projDir, this.platform, fPort, host, ::this.getInfo)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
         /** @type {EventServer} */
         this.eServer = new EventServer(ePort, host)
         /** @type {AlloyCompiler} */
-        this.compiler = new AlloyCompiler(this.projDir)
+        this.compiler = new AlloyCompiler(this.projDir, this.platform)
 
         this.registerListeners()
     }
@@ -145,7 +151,6 @@ export default class MainProcess {
     /**
      * compile alloy when one of the files in alloy changes
      * @param {string} path
-     * @todo support for non-ios|android OS
      * @private
      */
     compileAlloy(path) {

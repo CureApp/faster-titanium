@@ -1,6 +1,8 @@
 
 import { join, resolve, } from 'path'
+import platforms from 'alloy/platforms/index' // TODO: prepare original object
 
+const folderNames = Object.keys(platforms).map(p => platforms[p].titaniumFolder)
 /**
  * @param {string} projectDir absolute path to the titanium project directory
  * @param {string} path absolute path to the path in Resources
@@ -11,7 +13,7 @@ export function isAppJS(projectDir, path) {
     projectDir = resolve(projectDir)
     path = resolve(path)
 
-    return ['', 'android', 'ipad', 'iphone', 'ios']
+    return folderNames
         .map(name => join(projectDir, 'Resources', name, 'app.js'))
         .some(appPath => path === appPath)
 }

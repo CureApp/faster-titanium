@@ -36,7 +36,7 @@ export default class FasterTitanium {
         /** @type {Object} global object of Titanium environment */
         this.global = g
         /** @type {RequireAgent} */
-        this.reqAgent = new RequireAgent(this.global.require, host, fPort, this.getPlatform())
+        this.reqAgent = new RequireAgent(this.global.require, host, fPort)
         /** @type {string} file server URL */
         this.url = `http://${host}:${fPort}`
         /** @type {number} @private */
@@ -67,14 +67,6 @@ export default class FasterTitanium {
         this.socket.connect()
         this.reqAgent.require('app')
     }
-
-    /**
-     * @returns {string}
-     */
-    getPlatform() {
-        return Ti.Platform.osname
-    }
-
 
     /**
      * @param {Object} err error from TCP socket

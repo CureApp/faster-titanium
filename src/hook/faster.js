@@ -26,9 +26,9 @@ export function init(logger, config, cli) {
 
     const hooks = {
 
-        'build.android.config': scope::attachFasterFlag,
-        'build.ios.config'    : scope::attachFasterFlag,
+        'build.config': scope::attachFasterFlag,
 
+        // only ios and android have copyResource hook.
         'build.ios.copyResource'    : { pre: scope::renameAppJS },
         'build.android.copyResource': { pre: scope::renameAppJS },
 
@@ -119,6 +119,7 @@ export function addFasterTitanium(destDir) {
 export function launchServer(data) {
 
     const { faster,
+            platform,
             'project-dir': projectDir,
             'faster-port1': fPort,
             'faster-port2': ePort } = this.cli.argv
@@ -126,6 +127,7 @@ export function launchServer(data) {
 
 
     const optsForServer = {
+        platform,
         fPort: parseInt(fPort, 10),
         ePort: parseInt(ePort, 10),
         host : this.host

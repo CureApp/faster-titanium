@@ -17,9 +17,10 @@ export default class AlloyCompiler {
     /**
      * @param {string} projDir
      */
-    constructor(projDir) {
+    constructor(projDir, platform) {
         /** @type {string} */
         this.projDir = projDir
+        this.platform = platform
     }
 
     /** @type {string} */
@@ -36,15 +37,6 @@ export default class AlloyCompiler {
     get configPath() {
         return this.alloyDir + '/config.json'
     }
-
-    /**
-     * @type {string[]}
-     * @todo put all platforms
-     */
-    get platforms() {
-        return ['ios', 'android']
-    }
-
 
     /**
      * @param {string} path
@@ -70,9 +62,7 @@ export default class AlloyCompiler {
 
             const relPath = relative(this.projDir, this.alloyJSPath)
 
-            this.platforms.forEach(os => {
-                optimizeAlloy(this.projDir, relPath, {platform: os, deploytype: 'development'})
-            })
+            optimizeAlloy(this.projDir, relPath, {platform: this.platform, deploytype: 'development'})
         })
     }
 
@@ -89,15 +79,10 @@ export default class AlloyCompiler {
      * @return {Promise}
      */
     compileFiles(path) {
-
         const relPath = relative(this.projDir, path)
-
-        return Promise.all(
-            this.platforms
-                .map (os => `${alloyPath} compile --config platform=${os},file=${relPath}`)
-                .map(___o)
-                .map(command => P(y => exec(command, y)))
-        )
+        const command = `${alloyPath} compile --config platform=${this.platform},file=${relPath}`
+        ___o(command)
+        return P(y => exec(command, y))
     }
 
     /**
@@ -105,11 +90,8 @@ export default class AlloyCompiler {
      * @deprecated
      */
     compileAll() {
-        return Promise.all(
-            this.platforms
-                .map (os => `${alloyPath} compile --config platform=${os}`)
-                .map(___o)
-                .map(command => P(y => exec(command, y)))
-        )
+        const command = `${alloyPath} compile --config platform=${this.platform}`
+        ___o(command)
+        return P(y => exec(command, y))
     }
 }

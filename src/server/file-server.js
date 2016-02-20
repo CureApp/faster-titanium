@@ -10,6 +10,8 @@ import {EventEmitter} from 'events'
 import ResourceResponder from './resource-responder'
 import AppJsConverter from './app-js-converter'
 
+import platforms from 'alloy/platforms/index' // TODO: prepare original object
+
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:FileServer')
 const ___x = debug('faster-titanium:FileServer:error')
@@ -24,29 +26,26 @@ export default class FileServer extends EventEmitter {
      * @param {number} [port=4157]
      * @param {string} [host=127.0.0.1]
      */
-    constructor(projDir, port = 4157, host = '127.0.0.1', getInfo) {
+    constructor(projDir, platform, port = 4157, host = '127.0.0.1', getInfo) {
         super()
 
         /** @type {string} */
         this.projDir = projDir
-
+        /** @type {string} */
+        this.platformDirname = platforms[platform].titaniumFolder
         /** @type {number} */
         this.port = parseInt(port, 10)
-
         /** @type {string} */
         this.host = host
-
         /** @type {net.Socket[]} */
         this.sockets = []
-
         /** @type {string} code of app.js */
         this.appJSCode = null
-
         /** @type {function}:object function returning server info */
         this.getInfo = getInfo
-
         /** @type {http.Server} */
         this.server = http.createServer(::this.onRequest)
+
         this.server.on('error', err => ___x(err) || this.emit('error', err))
         this.server.on('connection', socket => this.sockets.push(socket))
     }
@@ -110,9 +109,8 @@ export default class FileServer extends EventEmitter {
      */
     responseResource(req, res) {
         let url = urlParser(req.url).pathname
-        const platform  = req.headers['x-platform'] || 'iphone'
 
-        let responder = new ResourceResponder(this.projDir, url, platform)
+        let responder = new ResourceResponder(this.projDir, url, this.platformDirname)
         if (!responder.exists) {
             responder = new ResourceResponder(this.projDir, url)
         }

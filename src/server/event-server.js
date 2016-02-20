@@ -76,7 +76,6 @@ export default class EventServer extends EventEmitter {
             return ____(`sending message suppressed: No client.`)
         }
         if (!this.client.writable) {
-            this.client.close()
             this.client = null
             return ____(`sending message suppressed: Socket is not writable.`)
         }
