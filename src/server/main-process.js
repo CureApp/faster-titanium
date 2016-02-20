@@ -5,7 +5,8 @@ import FileServer from './file-server'
 import FileWatcher from './file-watcher'
 import EventServer from './event-server'
 import AlloyCompiler from './alloy-compiler'
-import { isAppJS } from '../util'
+import Preferences from '../common/preferences'
+import { isAppJS } from '../common/util'
 
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = debug('faster-titanium:MainProcess:error')
@@ -29,6 +30,8 @@ export default class MainProcess {
 
         /** @type {string} project dir */
         this.projDir = projDir
+        /** @type {Preferences} */
+        this.prefs = new Preferences()
         /** @type {number} @private */
         this.reservedBroadcasts = 0
         /** @type {FileServer} */
@@ -169,7 +172,8 @@ export default class MainProcess {
         return {
             'Project Root'   : this.projDir,
             'Connections'    : this.eServer.updateSockets().length,
-            'Process Uptime' : process.uptime() + ' [sec]'
+            'Process Uptime' : process.uptime() + ' [sec]',
+            'Loading Style'  : this.prefs.style
             //'Reloaded Times' : this.stats.reloadedTimes
         }
     }

@@ -6,7 +6,7 @@ import { writeFileSync as write,
          existsSync as exists,
          mkdirSync as mkdir } from 'fs'
 import MainProcess from '../server/main-process'
-import { isAppJS } from '../util'
+import { isAppJS } from '../common/util'
 
 /**
  * attach cli hooks to titanium CLI
