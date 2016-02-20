@@ -8,7 +8,8 @@ const ____ = debug('faster-titanium:EventServer')
 const ___x = debug('faster-titanium:EventServer:error')
 
 /**
- * Server connecting continuously with Titanium
+ * Server connecting continuously with Titanium App.
+ * Restrict connection: only one device can connect to the server.
  */
 export default class EventServer extends EventEmitter {
 
@@ -19,7 +20,7 @@ export default class EventServer extends EventEmitter {
         super()
         this.port = port
         this.host = host
-        this.sockets = []
+        this.client = null
         this.server = net.createServer(::this.addClient)
         this.server.on('error', err => ___x(err) || this.emit('error', err))
     }
@@ -42,8 +43,9 @@ export default class EventServer extends EventEmitter {
      */
     close() {
         ____(`terminating...`)
-        this.sockets.forEach(socket => socket.destroy())
-        return P(y => this.server.close(y)).then(x =>{
+        this.client && this.client.destroy()
+
+        return P(y => this.server.close(y)).then(x => {
             ____(`terminated`)
         })
     }
@@ -53,34 +55,33 @@ export default class EventServer extends EventEmitter {
      * @param {net.Socket} socket
      */
     addClient(socket) {
-        ____(`New connection. Add client.`)
+        if (this.client && this.client.writable) {
+            ____(`New connection, but do nothing as connection already exists.`)
+            socket.close()
+            return
+        }
+
+        ____(`New connection. Set client.`)
         socket.setEncoding('utf8')
-        this.sockets.push(socket)
+        this.client = socket
     }
 
 
     /**
-     * send payload to all available sockets
+     * send payload to the client
      * @param {object} [payload={}]
      */
-    broadcast(payload = {}) {
-        ____(`broadcasting payload: ${JSON.stringify(payload)}`)
+    send(payload = {}) {
+        if (!this.client) {
+            return ____(`sending message suppressed: No client.`)
+        }
+        if (!this.client.writable) {
+            this.client.close()
+            this.client = null
+            return ____(`sending message suppressed: Socket is not writable.`)
+        }
 
-        this.updateSockets()
-
-        ____(`total clients: ${this.sockets.length}`)
-
-        this.sockets.forEach(socket => {
-            socket.write(JSON.stringify(payload))
-        })
-    }
-
-
-    /**
-     * filter closed sockets
-     * @private
-     */
-    updateSockets() {
-        return this.sockets = this.sockets.filter(socket => socket.writable)
+        ____(`sending payload: ${JSON.stringify(payload)}`)
+        this.client.write(JSON.stringify(payload))
     }
 }

@@ -15,7 +15,7 @@ export default class FasterTitanium {
      * @param {number} [options.ePort=4156] port number of event server
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
-    static run(g, options = {}) {
+    static run(g, options) {
         const ft = new FasterTitanium(g, options)
         FasterTitanium.instance = ft
         ft.startApp()
@@ -35,20 +35,30 @@ export default class FasterTitanium {
 
         /** @type {Object} global object of Titanium environment */
         this.global = g
-
         /** @type {RequireAgent} */
         this.reqAgent = new RequireAgent(this.global.require, host, fPort, this.getPlatform())
-
         /** @type {string} file server URL */
         this.url = `http://${host}:${fPort}`
-
+        /** @type {number} @private */
+        this.reservedReload = 0
         /** @type {Socket} file server URL */
         this.socket = new Socket({host: host, port: parseInt(ePort, 10)})
         this.socket.onConnection(x => ____(`Connection established to ${host}:${ePort}`))
-        this.socket.onData(::this.reload)
+
+        this.registerListeners()
+    }
+
+    /**
+     * register event listeners.
+     * called only once in constructor
+     * @private
+     */
+    registerListeners() {
+        this.socket.onData(::this.onPayload)
         this.socket.onClose(x => alert('[FasterTitanium] TCP server is terminated.'))
         this.socket.onError(::this.socketError)
     }
+
 
     /**
      * connect to event server and begin app with the given code
@@ -57,7 +67,6 @@ export default class FasterTitanium {
         this.socket.connect()
         this.reqAgent.require('app')
     }
-
 
     /**
      * @returns {string}
@@ -100,21 +109,63 @@ export default class FasterTitanium {
         setTimeout(::this.socket.reconnect, sec * 1000)
     }
 
+
+    /**
+     * event listener called when the event server sends payload
+     * @param {string} payload (can be parsed as JSON)
+     */
+    onPayload(payloadStr) {
+        const payload = JSON.parse(payloadStr)
+        console.log(payload)
+
+        switch (payload.event) {
+            case 'will-reload':
+                this.reservedReload++
+                break
+            case 'reload':
+                this.reload(payload)
+                break
+            case 'reflect':
+                this.reflect()
+                break
+            default:
+                break
+        }
+    }
+
+
     /**
      * reload this app
+     * @param {Object} [options={}]
+     * @param {boolean} [options.reserved=false]
+     * @param {number} [options.timer=0]
+     * @param {boolean} [options.force=false]
      */
-    reload() {
+    reload(options = {}) {
 
-        this.socket.end()
+        const { reserved = false, timer = 0, force = false } = options
 
-        try {
-            ____('reloading app')
-            Ti.App._restart()
-        }
-        catch(e) {
-            ____('reload')
-            this.reqAgent.clearCache()
-            this.reqAgent.require('app')
-        }
+        if (reserved) { this.reservedReload-- }
+        this.reservedReload++
+
+        setTimeout(x => {
+            this.reservedReload--
+
+            if (this.reservedReload > 0 && !force) {
+                return ____(`Reload suppressed because reserved reloads exists. Use web reload button to force reloading: ${this.url}`)
+            }
+
+            this.socket.end()
+
+            try {
+                ____('reloading app')
+                Ti.App._restart()
+            }
+            catch(e) {
+                ____('reload')
+                this.reqAgent.clearCache()
+                this.reqAgent.require('app')
+            }
+        }, timer)
     }
 }

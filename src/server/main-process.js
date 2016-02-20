@@ -11,8 +11,6 @@ import { isAppJS } from '../common/util'
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = debug('faster-titanium:MainProcess:error')
 
-const wait = t => new Promise(y => setTimeout(y, t))
-
 
 /**
  * main process
@@ -22,18 +20,15 @@ export default class MainProcess {
     /**
      * @param {string} projDir
      * @param {Object} [options={}]
-     * @param {number} [options.minIntervalSec=3] minimum interval seconds to broadcast
      */
     constructor(projDir, options = {}) {
 
-        const { fPort, ePort, host, minIntervalSec } = options
+        const { fPort, ePort, host } = options
 
         /** @type {string} project dir */
         this.projDir = projDir
         /** @type {Preferences} */
         this.prefs = new Preferences()
-        /** @type {number} @private */
-        this.reservedBroadcasts = 0
         /** @type {FileServer} */
         this.fServer = new FileServer(this.projDir, fPort, host, ::this.getInfo)
         /** @type {FileWatcher} */
@@ -61,7 +56,7 @@ export default class MainProcess {
         this.watcher.on('change', ::this.onResourceFileChanged)
         this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
         this.fServer.on('got-kill-message', ::this.end)
-        this.fServer.on('got-reload-message', ::this.broadcastReload)
+        this.fServer.on('got-reload-message', x => this.sendReload({force: true}))
     }
 
 
@@ -103,7 +98,7 @@ export default class MainProcess {
         if (isAppJS(this.projDir, path)) {
             this.fServer.clearAppJSCache()
         }
-        this.broadcastReload()
+        this.sendReload({timer: 1000})
     }
 
     /**
@@ -118,38 +113,32 @@ export default class MainProcess {
 
         ____(`changed:alloy ${path}`)
 
-        this.willBroadcast(this.compileAlloy(path).catch(___x))
+        this.send({event: 'will-reload'})
+
+        this.compileAlloy(path)
+            .catch(___x)
+            .then(x => this.sendReload({reserved: true}))
     }
 
     /**
-     * broadcast
+     * send message to the client of event server
+     * @param {Object} payload
+     * @param {string} payload.event event name. oneof will-reload|reload|reflect
      */
-    willBroadcast(promise) {
-        this.reservedBroadcasts++
-        return promise.then(x => {
-            this.reservedBroadcasts--
-            return this.broadcastReload(0)
-        })
+    send(payload) {
+        console.assert(payload && payload.event)
+        this.eServer.send(payload)
     }
-
 
     /**
      * send reload message to all connected clients
+     * @param {Object} [options={}]
      * @return {Promise}
      * @private
      */
-    broadcastReload(duration = 1000) {
-
-        this.reservedBroadcasts++
-
-        return wait(duration).then(x => {
-            this.reservedBroadcasts--
-            ____("this.reservedBroadcasts", this.reservedBroadcasts)
-
-            if (this.reservedBroadcasts > 0) { return; }
-
-            this.eServer.broadcast({event: 'reload'})
-        })
+    sendReload(options = {}) {
+        const payload = Object.assign({}, {event: 'reload'}, options)
+        this.send(payload)
     }
 
 
@@ -168,10 +157,13 @@ export default class MainProcess {
     }
 
 
+    /**
+     * get information of FasterTitanium process
+     * @return {Object}
+     */
     getInfo() {
         return {
-            'Project Root'   : this.projDir,
-            'Connections'    : this.eServer.updateSockets().length,
+            'project root'   : this.projdir,
             'Process Uptime' : process.uptime() + ' [sec]',
             'Loading Style'  : this.prefs.style
             //'Reloaded Times' : this.stats.reloadedTimes
