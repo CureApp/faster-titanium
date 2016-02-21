@@ -9,8 +9,7 @@ import {EventEmitter} from 'events'
 
 import ResourceResponder from './resource-responder'
 import AppJsConverter from './app-js-converter'
-
-import platforms from 'alloy/platforms/index' // TODO: prepare original object
+import {getPlatformDirname} from '../common/util'
 
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:FileServer')
@@ -32,7 +31,7 @@ export default class FileServer extends EventEmitter {
         /** @type {string} */
         this.projDir = projDir
         /** @type {string} */
-        this.platformDirname = platforms[platform].titaniumFolder
+        this.platformDirname = getPlatformDirname(platform)
         /** @type {number} */
         this.port = parseInt(port, 10)
         /** @type {string} */

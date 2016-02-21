@@ -6,10 +6,8 @@ import { existsSync, readFileSync as read, writeFileSync as write } from 'fs'
 import path from 'path'
 path.existsSync = existsSync // for backward compatibility
 
-import 'alloy/Alloy/common/constants' // it somehow resolves variables like 'OS_IOS'
-
 import uglifyjs from 'alloy/node_modules/uglify-js'
-import platforms from 'alloy/platforms/index'
+import {getPlatformDirname} from '../common/util'
 import { getAndValidateProjectPaths as getPaths } from 'alloy/Alloy/utils'
 import { OPTIONS_OUTPUT as outputOptions } from 'alloy/Alloy/commands/compile/sourceMapper'
 
@@ -32,15 +30,15 @@ export default function optimizeAlloy(projDir, relPath, alloyConfig) {
 
     const paths = getPaths(projDir)
 
-    const { titaniumFolder } = platforms[alloyConfig.platform]
+    const platformDirname = getPlatformDirname(alloyConfig.platform)
 
-    const file = path.join(titaniumFolder, relPath.slice(4))
+    const file = path.join(platformDirname, relPath.slice(4))
 
     const compileConfig = { alloyConfig, dir: paths }
 
     const fullpath = path.join(compileConfig.dir.resources, file)
 
-    ____(`optimizing ${titaniumFolder}/${relPath}`)
+    ____(`optimizing ${platformDirname}/${relPath}`)
 
     let ast = uglifyjs.parse(read(fullpath, 'utf8'), { filename: file })
     ast = [ 'builtins', 'optimizer', 'compress' ]
