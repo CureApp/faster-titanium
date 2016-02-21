@@ -169,8 +169,9 @@ export default class MainProcess {
     getInfo() {
         return {
             'project root'   : this.projdir,
-            'Process Uptime' : process.uptime() + ' [sec]',
-            'Loading Style'  : this.prefs.style
+            'process uptime' : process.uptime() + ' [sec]',
+            'platform'       : this.platform,
+            'loading style'  : this.prefs.style
             //'Reloaded Times' : this.stats.reloadedTimes
         }
     }
