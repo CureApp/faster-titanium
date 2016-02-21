@@ -55,13 +55,14 @@ export default class EventServer extends EventEmitter {
      * @param {net.Socket} socket
      */
     addClient(socket) {
-        if (this.client && this.client.writable) {
-            ____(`New connection, but do nothing as connection already exists.`)
-            socket.close()
-            return
+        if (this.client) {
+            ____(`New connection, Overwrite existing connection.`)
+            if (this.client.writable) { this.client.end() }
+        }
+        else {
+            ____(`New connection. Set client.`)
         }
 
-        ____(`New connection. Set client.`)
         socket.setEncoding('utf8')
         this.client = socket
     }
