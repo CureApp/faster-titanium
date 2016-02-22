@@ -8,7 +8,7 @@ import { writeFileSync as write,
 import op from 'openport'
 import MainProcess from '../server/main-process'
 import { isAppJS } from '../common/util'
-import bundleFromSource from './bundle-from-source'
+import browserify from 'browserify'
 
 /**
  * attach cli hooks to titanium CLI
@@ -115,29 +115,36 @@ export function manipulateAppJS(data, finished) {
 
     data.args[0] = newSrc
 
-    this::writeNewAppJS(newSrc)
-        .then(x => finished(null, data))
-        .catch(e => finished(e))
+    const { fPort, ePort, host } = this.ftProcess
+
+
+    generateNewAppJS(fPort, ePort, host).then(code => {
+        write(newSrc, code)
+        finished(null, data)
+    })
+    .catch(e => finished(e))
 }
 
-/**
- * write new app.js
- */
-function writeNewAppJS(path) {
 
-    const opts = JSON.stringify({
-        fPort: this.ftProcess.fPort,
-        ePort: this.ftProcess.ePort,
-        host : this.ftProcess.host
-    })
+/**
+ * Generate new app.js code.
+ * New app.js consists of bundled lib of faster-titanium and one line initializer
+ */
+function generateNewAppJS(fPort, ePort, host) {
+
+    const opts = JSON.stringify({ fPort, ePort, host })
 
     this.logger.info(`[FasterTitanium] call faster-titanium with options: ${opts} in app.js`)
 
-    const code = `require('./faster-titanium').default.run(this, ${opts})`
-    const basedir = resolve(__dirname, '../titanium') // dist/titanium
+    const initialCode = `Ti.FasterTitanium.run(this, ${opts})`
+    const tiEntry = resolve(__dirname, '../titanium/faster-titanium') // dist/titanium/faster-titanium
 
-    return bundleFromSource(code, basedir).then(newAppJS => {
-        write(path, newAppJS)
+    return new Promise((y, n) => {
+        browserify(tiEntry).bundle((e, buf) => {
+            if (e) return n(e)
+
+            y([buf.toString(), initialCode].join('\n'))
+        })
     })
 }
 
