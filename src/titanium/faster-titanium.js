@@ -106,9 +106,8 @@ export default class FasterTitanium {
      * event listener called when the event server sends payload
      * @param {string} payload (can be parsed as JSON)
      */
-    onPayload(payloadStr) {
-        const payload = JSON.parse(payloadStr)
-        console.log(payload)
+    onPayload(payload) {
+        ____(`payload: ${JSON.stringify(payload)}`, 'trace')
 
         switch (payload.event) {
             case 'will-reload':

@@ -145,7 +145,6 @@ export function addFasterTitanium(destDir) {
     const srcDir = resolve(__dirname, '../../', 'dist/titanium')
     destDir += '/faster-titanium'
     if (!exists(destDir)) { mkdir(destDir) }
-    this.logger.warn(destDir)
 
     readDir(srcDir).forEach(file => {
         this.logger.info(`[FasterTitanium] add faster-titanium/${file}`)

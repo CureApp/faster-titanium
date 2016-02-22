@@ -50,7 +50,17 @@ export default class Socket {
                     if (!e.buffer) {
                         return this.closeListener && this.closeListener()
                     }
-                    this.dataListener && this.dataListener('' + e.buffer)
+                    if (!this.dataListener) return
+
+                    ('' + e.buffer)
+                        .trim()
+                        .split('\n') // split two or more JSONs (see src/server/event-server.js)
+                        .map(str => {
+                            try { return JSON.parse(str) }
+                            catch (e) { console.error(e); return null }
+                        })
+                        .filter(v => v != null)
+                        .forEach(payload => this.dataListener(payload))
                 }, 1024, true)
             },
 

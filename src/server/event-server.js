@@ -80,7 +80,9 @@ export default class EventServer extends EventEmitter {
             return ____(`sending message suppressed: Socket is not writable.`)
         }
 
-        ____(`sending payload: ${JSON.stringify(payload)}`)
-        this.client.write(JSON.stringify(payload))
+        ____(`sending payload: ${JSON.stringify(payload)}\n`)
+        // as payloads are sometimes joined with previous one, the client should split them with "\n" separator
+        // (see src/titanium/socket.js)
+        this.client.write(JSON.stringify(payload) + '\n')
     }
 }
