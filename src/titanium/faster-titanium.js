@@ -160,3 +160,5 @@ export default class FasterTitanium {
         }, timer)
     }
 }
+
+if (typeof Ti !== 'undefined') Ti.FasterTitanium = FasterTitanium

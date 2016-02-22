@@ -8,6 +8,7 @@ import { writeFileSync as write,
 import op from 'openport'
 import MainProcess from '../server/main-process'
 import { isAppJS } from '../common/util'
+import bundleFromSource from './bundle-from-source'
 
 /**
  * attach cli hooks to titanium CLI
@@ -31,8 +32,8 @@ export function init(logger, config, cli) {
         ['build.pre.compile', scope::launchServers], // attaches scope.ftProcess
 
         // only ios and android have copyResource hook.
-        ['build.ios.copyResource',      { pre: scope::renameAppJS }],
-        ['build.android.copyResource',  { pre: scope::renameAppJS }],
+        ['build.ios.copyResource',      { pre: scope::manipulateAppJS }],
+        ['build.android.copyResource',  { pre: scope::manipulateAppJS }],
 
         ['build.post.compile', scope::startWatching],
         ['build.post.compile', scope::showServerInfo]
@@ -64,7 +65,7 @@ export function launchServers(data, finished) {
             platform,
             'ft-port': port = 4157,
             'project-dir': projectDir } = this.cli.argv
-    if (!faster) return;
+    if (!faster) return finished(null, data);
 
     return getPorts(port).then(ports => {
 
@@ -97,32 +98,32 @@ export function getPorts(defaultPort) {
 
 
 /**
- * 1. rename app.js => original-app.js
- * 2. write new app.js
- * 3. require faster-titanium and run in app.js
+ * original app.js => app.js with faster-titanium
  * @private (export for test)
  */
-export function renameAppJS(data) {
+export function manipulateAppJS(data, finished) {
     const { faster, 'project-dir': projectDir } = this.cli.argv
-    if (!faster) return;
+    if (!faster) return finished(null, data);
 
     const [src, dest] = data.args
 
-    if (!isAppJS(projectDir, src)) return;
+    if (!isAppJS(projectDir, src)) return finished(null, data);
 
-    const destDir = dirname(dest)
+    const newSrc = dirname(dest) + '/faster-titanium.js' // new src path is in build dir, just because it's temporary.
 
-    this.logger.info(`[FasterTitanium] rename app.js into original-app.js`)
-    data.args[1] = destDir + '/original-app.js'
+    this.logger.info(`[FasterTitanium] manipulating app.js: attaching faster-titanium functions`)
 
-    this::writeNewAppJS(dest)
-    this::addFasterTitanium(destDir)
+    data.args[0] = newSrc
+
+    this::writeNewAppJS(newSrc)
+        .then(x => finished(null, data))
+        .catch(e => finished(e))
 }
 
 /**
  * write new app.js
  */
-function writeNewAppJS(dest) {
+function writeNewAppJS(path) {
 
     const opts = JSON.stringify({
         fPort: this.ftProcess.fPort,
@@ -132,23 +133,11 @@ function writeNewAppJS(dest) {
 
     this.logger.info(`[FasterTitanium] call faster-titanium with options: ${opts} in app.js`)
 
-    const newAppJS = `require('faster-titanium/index').run(this, ${opts})`
-    write(dest, newAppJS)
-}
+    const code = `require('./faster-titanium').default.run(this, ${opts})`
+    const basedir = resolve(__dirname, '../titanium') // dist/titanium
 
-
-/**
- * copy dist/titanium/* => (dest-dir)/faster-titanium/*
- * @private (export for test)
- */
-export function addFasterTitanium(destDir) {
-    const srcDir = resolve(__dirname, '../../', 'dist/titanium')
-    destDir += '/faster-titanium'
-    if (!exists(destDir)) { mkdir(destDir) }
-
-    readDir(srcDir).forEach(file => {
-        this.logger.info(`[FasterTitanium] add faster-titanium/${file}`)
-        write(join(destDir, file), read(join(srcDir, file)))
+    return bundleFromSource(code, basedir).then(newAppJS => {
+        write(path, newAppJS)
     })
 }
 
@@ -164,7 +153,7 @@ function startWatching() {
  * show server information
  */
 function showServerInfo() {
-    console.log(`
+    this.logger.info(`
 
         Access to FasterTitanium Web UI
         ${this.ftProcess.url}
