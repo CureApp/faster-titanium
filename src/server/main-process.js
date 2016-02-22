@@ -80,19 +80,30 @@ export default class MainProcess {
         this.fServer.on('got-reload-message', x => this.sendReload({force: true}))
     }
 
-
     /**
-     * start fileserver and eventserver
+     * launch fileserver and eventserver
      * @return {Promise}
      * @public
      */
-    start() {
-        ____(`starting servers`)
+    launchServers() {
+        ____(`launching servers`)
         return Promise.all([
             this.fServer.listen(),
             this.eServer.listen()
         ]).catch(___x)
     }
+
+
+    /**
+     * starting file watching
+     * @public
+     */
+    watch() {
+        ____(`starting file watcher`)
+        this.watcher.watch()
+    }
+
+
 
     /**
      * close servers and stop watching

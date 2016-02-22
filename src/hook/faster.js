@@ -25,20 +25,20 @@ export function init(logger, config, cli) {
         return;
     }
 
-    const hooks = {
+    const hooks = [
 
-        'build.config': scope::attachFasterFlag,
-
-        'build.pre.compile': scope::launchServer, // attaches scope.ftProcess
+        ['build.config', scope::attachFasterFlag],
+        ['build.pre.compile', scope::launchServers], // attaches scope.ftProcess
 
         // only ios and android have copyResource hook.
-        'build.ios.copyResource'    : { pre: scope::renameAppJS },
-        'build.android.copyResource': { pre: scope::renameAppJS },
-        'build.post.compile': scope::showServerInfo
-    }
+        ['build.ios.copyResource',      { pre: scope::renameAppJS }],
+        ['build.android.copyResource',  { pre: scope::renameAppJS }],
 
-    Object.keys(hooks)
-        .forEach(hookName => cli.addHook(hookName, hooks[hookName]))
+        ['build.post.compile', scope::startWatching],
+        ['build.post.compile', scope::showServerInfo]
+    ]
+
+    hooks.forEach(args => cli.addHook.apply(cli, args))
 }
 
 /**
@@ -58,7 +58,7 @@ export function attachFasterFlag(data) {
 /**
  * launch file/event servers to communicate with App
  */
-export function launchServer(data, finished) {
+export function launchServers(data, finished) {
 
     const { faster,
             platform,
@@ -75,7 +75,7 @@ export function launchServer(data, finished) {
             host : getAddress()
         }
         this.ftProcess = new MainProcess(projectDir, optsForServer)
-        return this.ftProcess.start()
+        return this.ftProcess.launchServers()
     })
     .then(x => finished(null, data), finished)
 }
@@ -152,6 +152,14 @@ export function addFasterTitanium(destDir) {
         write(join(destDir, file), read(join(srcDir, file)))
     })
 }
+
+/**
+ * start watching files
+ */
+function startWatching() {
+    this.ftProcess.watch()
+}
+
 
 /**
  * show server information
