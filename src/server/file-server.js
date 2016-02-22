@@ -23,9 +23,8 @@ export default class FileServer extends EventEmitter {
     /**
      * @param {string} projDir project root directory (absolute path)
      * @param {number} [port=4157]
-     * @param {string} [host=127.0.0.1]
      */
-    constructor(projDir, platform, port = 4157, host = '127.0.0.1', getInfo) {
+    constructor(projDir, platform, port = 4157, getInfo) {
         super()
 
         /** @type {string} */
@@ -34,8 +33,6 @@ export default class FileServer extends EventEmitter {
         this.platformDirname = getPlatformDirname(platform)
         /** @type {number} */
         this.port = parseInt(port, 10)
-        /** @type {string} */
-        this.host = host
         /** @type {net.Socket[]} */
         this.sockets = []
         /** @type {string} code of app.js */
@@ -57,7 +54,7 @@ export default class FileServer extends EventEmitter {
      */
     listen() {
         return P(y => this.server.listen(this.port, y)).then(x => {
-            ____(`start listening ${this.host}:${this.port}`)
+            ____(`start listening ${this.port}`)
         })
     }
 
@@ -74,7 +71,6 @@ export default class FileServer extends EventEmitter {
             ____(`terminated`)
         })
     }
-
 
     /**
      * @param {http.ServerRequest} req

@@ -14,12 +14,11 @@ const ___x = debug('faster-titanium:EventServer:error')
 export default class EventServer extends EventEmitter {
 
     /**
-     * @param {string} [port=4156]
+     * @param {string} [port]
      */
-    constructor(port = 4156, host = '127.0.0.1') {
+    constructor(port) {
         super()
         this.port = port
-        this.host = host
         this.client = null
         this.server = net.createServer(::this.addClient)
         this.server.on('error', err => ___x(err) || this.emit('error', err))
@@ -32,7 +31,7 @@ export default class EventServer extends EventEmitter {
      */
     listen() {
         return P(y => this.server.listen(this.port, y)).then(x =>{
-            ____(`start listening ${this.host}:${this.port}`)
+            ____(`start listening ${this.port}`)
         })
     }
 

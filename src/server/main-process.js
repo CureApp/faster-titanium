@@ -26,27 +26,42 @@ export default class MainProcess {
      * @param {string} platform platform name (ios|android|mobileweb|windows)
      */
     constructor(projDir, options = {}) {
-
         const { fPort, ePort, host, platform } = options
 
         /** @type {string} project dir */
         this.projDir = projDir
+        /** @type {string} hostname or IP Address */
+        this.host = host
         /** @type {string} platform os name of the Titanium App */
         this.platform = platform
         /** @type {Preferences} */
         this.prefs = new Preferences()
         /** @type {FileServer} */
-        this.fServer = new FileServer(this.projDir, this.platform, fPort, host, ::this.getInfo)
+        this.fServer = new FileServer(this.projDir, this.platform, fPort, ::this.getInfo)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
         /** @type {EventServer} */
-        this.eServer = new EventServer(ePort, host)
+        this.eServer = new EventServer(ePort)
         /** @type {AlloyCompiler} */
         this.compiler = new AlloyCompiler(this.projDir, this.platform)
 
         this.registerListeners()
     }
 
+    /** @type {string} */
+    get url() {
+        return `http://${this.host}:${this.fServer.port}/`
+    }
+
+    /** @type {number} */
+    get fPort() {
+        return this.fServer.port
+    }
+
+    /** @type {number} */
+    get ePort() {
+        return this.eServer.port
+    }
 
     /**
      * register event listeners.
@@ -168,10 +183,11 @@ export default class MainProcess {
      */
     getInfo() {
         return {
-            'project root'   : this.projdir,
-            'process uptime' : process.uptime() + ' [sec]',
-            'platform'       : this.platform,
-            'loading style'  : this.prefs.style
+            'project root'     : this.projdir,
+            'event server port': this.ePort,
+            'process uptime'   : process.uptime() + ' [sec]',
+            'platform'         : this.platform,
+            'loading style'    : this.prefs.style
             //'Reloaded Times' : this.stats.reloadedTimes
         }
     }

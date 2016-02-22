@@ -11,8 +11,8 @@ export default class FasterTitanium {
      * create instance of FasterTitanium and start app
      * @param {Object} g global object of Titanium environment
      * @param {Object} options
-     * @param {number} [options.fPort=4157] port number of file server
-     * @param {number} [options.ePort=4156] port number of event server
+     * @param {number} options.fPort port number of file server
+     * @param {number} options.ePort port number of event server
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     static run(g, options) {
@@ -25,13 +25,13 @@ export default class FasterTitanium {
     /**
      * @param {Object} g global object of Titanium environment
      * @param {Object} options
-     * @param {number} [options.fPort=4157] port number of file server
-     * @param {number} [options.ePort=4156] port number of event server
+     * @param {number} options.fPort port number of file server
+     * @param {number} options.ePort port number of event server
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     constructor(g, options = {}) {
 
-        const { fPort = 4157, ePort = 4156, host = 'localhost' } = options
+        const { fPort, ePort, host = 'localhost' } = options
 
         /** @type {Object} global object of Titanium environment */
         this.global = g
