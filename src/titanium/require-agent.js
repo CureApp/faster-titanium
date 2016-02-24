@@ -9,9 +9,8 @@ export default class RequireAgent {
      * @param {function} original (titanium) require function
      * @param {string} host
      * @param {number} port
-     * @param {string} platform
      */
-    constructor(origRequire, host, port, platform) {
+    constructor(origRequire, host, port) {
 
         /** @type {function(moduleName: string):Object} */
         this.origRequire = origRequire
@@ -30,9 +29,6 @@ export default class RequireAgent {
 
         /** @type {number} */
         this.port = parseInt(port, 10)
-
-        /** @type {string} iphone|android */
-        this.platform = platform
     }
 
     /**
@@ -111,8 +107,7 @@ export default class RequireAgent {
         ____(`\tremote access: ${url}`)
 
         return Http.get(url, {
-            timeout: this.timeout,
-            header: { 'x-platform': this.platform }
+            timeout: this.timeout
         })
     }
 

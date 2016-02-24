@@ -14,12 +14,12 @@ export default class ResourceResponder {
     /**
      * @param {string} projDir
      * @param {string} url
-     * @param {string} platform
+     * @param {string} platformDirname
      */
-    constructor(projDir, url, platform) {
+    constructor(projDir, url, platformDirname) {
         this.projDir  = projDir
         this.url      = url
-        this.platform = platform
+        this.platformDirname = platformDirname
     }
 
     /** @type {Object} */
@@ -43,8 +43,8 @@ export default class ResourceResponder {
 
      /** @type {string} */
     get path() {
-        return this.platform
-            ? join(this.projDir, 'Resources', this.platform, this.url)
+        return this.platformDirname
+            ? join(this.projDir, 'Resources', this.platformDirname, this.url)
             : join(this.projDir, 'Resources', this.url)
     }
 

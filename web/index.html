@@ -146,49 +146,7 @@ table tr:hover td{
 
 </style>
 </head>
-<script>
-
-function wait(msec) {
-    return new Promise(function(y) {
-        setTimeout(y, msec)
-    })
-}
-
-
-function showInfo() {
-    fetch('/info').then(function(res) {
-        return res.json()
-    })
-    .then(function(json) {
-        var tableContent = Object.keys(json).map(function(k) {
-            return "<tr><td>" + k + "</td><td>" + json[k] + '</td></tr>'
-        }).join('')
-        console.log(tableContent)
-        document.getElementById('infoTableBody').innerHTML = tableContent
-    })
-}
-
-function reload() {
-    disableButton()
-    fetch('/reload').then(function(res) {
-        return res.text()
-    })
-    .then(function(text) {
-        document.getElementById('notice').innerText = 'Now Reloading...'
-        return wait(1500)
-    })
-    .then(function() {
-        document.getElementById('notice').innerText = ''
-    })
-    .then(showInfo)
-}
-
-function disableButton() {
-    // TODO
-}
-
-window.addEventListener('load', showInfo)
-</script>
+<script src="/faster-titanium-web-js/main.js"></script>
 <body>
 <pre id="notice"></pre>
 <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
@@ -198,6 +156,6 @@ window.addEventListener('load', showInfo)
 <tbody id="infoTableBody">
 </tbody>
 </table>
-<div id="reload-btn"><a onClick="reload()">Reload App</a></div>
+<div id="reload-btn"><a onClick="main.reload()">Reload App</a></div>
 </body>
 </html>

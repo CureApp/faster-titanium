@@ -8,18 +8,18 @@ const ____ = debug('faster-titanium:EventServer')
 const ___x = debug('faster-titanium:EventServer:error')
 
 /**
- * Server connecting continuously with Titanium
+ * Server connecting continuously with Titanium App.
+ * Restrict connection: only one device can connect to the server.
  */
 export default class EventServer extends EventEmitter {
 
     /**
-     * @param {string} [port=4156]
+     * @param {string} [port]
      */
-    constructor(port = 4156, host = '127.0.0.1') {
+    constructor(port) {
         super()
         this.port = port
-        this.host = host
-        this.sockets = []
+        this.client = null
         this.server = net.createServer(::this.addClient)
         this.server.on('error', err => ___x(err) || this.emit('error', err))
     }
@@ -31,7 +31,7 @@ export default class EventServer extends EventEmitter {
      */
     listen() {
         return P(y => this.server.listen(this.port, y)).then(x =>{
-            ____(`start listening ${this.host}:${this.port}`)
+            ____(`start listening ${this.port}`)
         })
     }
 
@@ -42,8 +42,9 @@ export default class EventServer extends EventEmitter {
      */
     close() {
         ____(`terminating...`)
-        this.sockets.forEach(socket => socket.destroy())
-        return P(y => this.server.close(y)).then(x =>{
+        this.client && this.client.destroy()
+
+        return P(y => this.server.close(y)).then(x => {
             ____(`terminated`)
         })
     }
@@ -53,34 +54,35 @@ export default class EventServer extends EventEmitter {
      * @param {net.Socket} socket
      */
     addClient(socket) {
-        ____(`New connection. Add client.`)
+        if (this.client) {
+            ____(`New connection, Overwrite existing connection.`)
+            if (this.client.writable) { this.client.end() }
+        }
+        else {
+            ____(`New connection. Set client.`)
+        }
+
         socket.setEncoding('utf8')
-        this.sockets.push(socket)
+        this.client = socket
     }
 
 
     /**
-     * send payload to all available sockets
+     * send payload to the client
      * @param {object} [payload={}]
      */
-    broadcast(payload = {}) {
-        ____(`broadcasting payload: ${JSON.stringify(payload)}`)
+    send(payload = {}) {
+        if (!this.client) {
+            return ____(`sending message suppressed: No client.`)
+        }
+        if (!this.client.writable) {
+            this.client = null
+            return ____(`sending message suppressed: Socket is not writable.`)
+        }
 
-        this.updateSockets()
-
-        ____(`total clients: ${this.sockets.length}`)
-
-        this.sockets.forEach(socket => {
-            socket.write(JSON.stringify(payload))
-        })
-    }
-
-
-    /**
-     * filter closed sockets
-     * @private
-     */
-    updateSockets() {
-        return this.sockets = this.sockets.filter(socket => socket.writable)
+        ____(`sending payload: ${JSON.stringify(payload)}\n`)
+        // as payloads are sometimes joined with previous one, the client should split them with "\n" separator
+        // (see src/titanium/socket.js)
+        this.client.write(JSON.stringify(payload) + '\n')
     }
 }

@@ -5,39 +5,41 @@ import { writeFileSync as write,
          readdirSync as readDir,
          existsSync as exists,
          mkdirSync as mkdir } from 'fs'
+import op from 'openport'
 import MainProcess from '../server/main-process'
-import { isAppJS } from '../util'
+import { isAppJS } from '../common/util'
+import browserify from 'browserify'
 
 /**
  * attach cli hooks to titanium CLI
  * this function must be named "init"
  *
- * ti build --faster [--faster-port1 4157] [--faster-port2 4156]
+ * ti build --faster [--ft-port 4157]
  * @public
  */
 export function init(logger, config, cli) {
 
-
-    const scope = { logger, config, cli, host: getAddress() }
+    const scope = { logger, config, cli }
 
     if (scope::multiplyRegistered()) {
         logger.warn(`[FasterTitanium] hook registration duplicated. Suppressed one: ${__filename}`)
         return;
     }
 
-    const hooks = {
+    const hooks = [
 
-        'build.android.config': scope::attachFasterFlag,
-        'build.ios.config'    : scope::attachFasterFlag,
+        ['build.config', scope::attachFasterFlag],
+        ['build.pre.compile', scope::launchServers], // attaches scope.ftProcess
 
-        'build.ios.copyResource'    : { pre: scope::renameAppJS },
-        'build.android.copyResource': { pre: scope::renameAppJS },
+        // only ios and android have copyResource hook.
+        ['build.ios.copyResource',      { pre: scope::manipulateAppJS }],
+        ['build.android.copyResource',  { pre: scope::manipulateAppJS }],
 
-        'build.post.compile': scope::launchServer
-    }
+        ['build.post.compile', scope::startWatching],
+        ['build.post.compile', scope::showServerInfo]
+    ]
 
-    Object.keys(hooks)
-        .forEach(hookName => cli.addHook(hookName, hooks[hookName]))
+    hooks.forEach(args => cli.addHook.apply(cli, args))
 }
 
 /**
@@ -49,67 +51,7 @@ export function attachFasterFlag(data) {
     const { flags, options } = data.result[1]
 
     flags.faster = { default: false, desc: 'enables faster rebuilding' }
-    options['faster-port1'] = { default: 4157, desc: 'port number of http server for faster-titanium' }
-    options['faster-port2'] = { default: 4156, desc: 'port number of tcp server for faster-titanim' }
-}
-
-
-/**
- * 1. rename app.js => original-app.js
- * 2. write new app.js
- * 3. require faster-titanium and run in app.js
- * @private (export for test)
- */
-export function renameAppJS(data) {
-    const { faster, 'project-dir': projectDir } = this.cli.argv
-    if (!faster) return;
-
-    const [src, dest] = data.args
-
-    if (!isAppJS(projectDir, src)) return;
-
-    const destDir = dirname(dest)
-
-    this.logger.info(`[FasterTitanium] rename app.js into original-app.js`)
-    data.args[1] = destDir + '/original-app.js'
-
-    this::writeNewAppJS(dest)
-    this::addFasterTitanium(destDir)
-}
-
-/**
- * write new app.js
- */
-function writeNewAppJS(dest) {
-
-    const { 'faster-port1': fPort, 'faster-port2': ePort } = this.cli.argv
-    const opts = JSON.stringify({
-        fPort: parseInt(fPort, 10),
-        ePort: parseInt(ePort, 10),
-        host : this.host
-    })
-
-    this.logger.info(`[FasterTitanium] call faster-titanium with host: ${this.host}, fPort: ${fPort}, ePort: ${ePort} in app.js`)
-
-    const newAppJS = `require('faster-titanium/index').run(this, ${opts})`
-    write(dest, newAppJS)
-}
-
-
-/**
- * copy dist/titanium/* => (dest-dir)/faster-titanium/*
- * @private (export for test)
- */
-export function addFasterTitanium(destDir) {
-    const srcDir = resolve(__dirname, '../../', 'dist/titanium')
-    destDir += '/faster-titanium'
-    if (!exists(destDir)) { mkdir(destDir) }
-    this.logger.warn(destDir)
-
-    readDir(srcDir).forEach(file => {
-        this.logger.info(`[FasterTitanium] add faster-titanium/${file}`)
-        write(join(destDir, file), read(join(srcDir, file)))
-    })
+    options['ft-port'] = { default: 4157, desc: 'port number for faster-titanium http server. If not available, use another open port.' }
 }
 
 
@@ -117,33 +59,115 @@ export function addFasterTitanium(destDir) {
 /**
  * launch file/event servers to communicate with App
  */
-export function launchServer(data) {
+export function launchServers(data, finished) {
 
     const { faster,
-            'project-dir': projectDir,
-            'faster-port1': fPort,
-            'faster-port2': ePort } = this.cli.argv
-    if (!faster) return;
+            platform,
+            'ft-port': port = 4157,
+            'project-dir': projectDir } = this.cli.argv
+    if (!faster) return finished(null, data);
 
+    return getPorts(port).then(ports => {
 
-    const optsForServer = {
-        fPort: parseInt(fPort, 10),
-        ePort: parseInt(ePort, 10),
-        host : this.host
-    }
-
-    new MainProcess(projectDir, optsForServer)
-        .start()
-        .then(x => {
-            console.log(`
-
-                Access to FasterTitanium Web UI
-                http://${this.host}:${fPort}/
-
-            `)
-        })
-
+        const optsForServer = {
+            platform,
+            fPort: ports[0],
+            ePort: ports[1],
+            host : getAddress()
+        }
+        this.ftProcess = new MainProcess(projectDir, optsForServer)
+        return this.ftProcess.launchServers()
+    })
+    .then(x => finished(null, data), finished)
 }
+
+/**
+ * @return {Promise}
+ * @private
+ */
+export function getPorts(defaultPort) {
+
+    return new Promise((y, n) => {
+
+        op.find({
+            startingPort: defaultPort,
+            count: 2
+        }, (err, ports) => err ? n(err) : y(ports))
+    })
+}
+
+
+/**
+ * original app.js => app.js with faster-titanium
+ * @private (export for test)
+ */
+export function manipulateAppJS(data, finished) {
+    const { faster, 'project-dir': projectDir } = this.cli.argv
+    if (!faster) return finished(null, data);
+
+    const [src, dest] = data.args
+
+    if (!isAppJS(projectDir, src)) return finished(null, data);
+
+    const newSrc = dirname(dest) + '/faster-titanium.js' // new src path is in build dir, just because it's temporary.
+
+    this.logger.info(`[FasterTitanium] manipulating app.js: attaching faster-titanium functions`)
+
+    data.args[0] = newSrc
+
+    const { fPort, ePort, host } = this.ftProcess
+
+
+    generateNewAppJS(fPort, ePort, host).then(code => {
+        write(newSrc, code)
+        finished(null, data)
+    })
+    .catch(e => finished(e))
+}
+
+
+/**
+ * Generate new app.js code.
+ * New app.js consists of bundled lib of faster-titanium and one line initializer
+ */
+function generateNewAppJS(fPort, ePort, host) {
+
+    const opts = JSON.stringify({ fPort, ePort, host })
+
+    this.logger.info(`[FasterTitanium] call faster-titanium with options: ${opts} in app.js`)
+
+    const initialCode = `Ti.FasterTitanium.run(this, ${opts})`
+    const tiEntry = resolve(__dirname, '../titanium/faster-titanium') // dist/titanium/faster-titanium
+
+    return new Promise((y, n) => {
+        browserify(tiEntry).bundle((e, buf) => {
+            if (e) return n(e)
+
+            y([buf.toString(), initialCode].join('\n'))
+        })
+    })
+}
+
+/**
+ * start watching files
+ */
+function startWatching() {
+    this.ftProcess.watch()
+}
+
+
+/**
+ * show server information
+ */
+function showServerInfo() {
+    this.logger.info(`
+
+        Access to FasterTitanium Web UI
+        ${this.ftProcess.url}
+    `)
+}
+
+
 
 
 /**
@@ -170,7 +194,9 @@ export function getAddress() {
  * check duplication of hook registration
  */
 export function multiplyRegistered() {
-    const registered = !!this.config['faster-titanium']
-    this.config['faster-titanium'] = true
-    return registered
+    const index = this.config.paths.hooks
+        .filter(path => path.match(/faster-titanium\/dist\/hook\/faster\.js$/))
+        .indexOf(__filename)
+
+    return index > 0
 }

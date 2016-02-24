@@ -9,6 +9,7 @@ import {EventEmitter} from 'events'
 
 import ResourceResponder from './resource-responder'
 import AppJsConverter from './app-js-converter'
+import {getPlatformDirname} from '../common/util'
 
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:FileServer')
@@ -22,31 +23,25 @@ export default class FileServer extends EventEmitter {
     /**
      * @param {string} projDir project root directory (absolute path)
      * @param {number} [port=4157]
-     * @param {string} [host=127.0.0.1]
      */
-    constructor(projDir, port = 4157, host = '127.0.0.1', getInfo) {
+    constructor(projDir, platform, port = 4157, getInfo) {
         super()
 
         /** @type {string} */
         this.projDir = projDir
-
+        /** @type {string} */
+        this.platformDirname = getPlatformDirname(platform)
         /** @type {number} */
         this.port = parseInt(port, 10)
-
-        /** @type {string} */
-        this.host = host
-
         /** @type {net.Socket[]} */
         this.sockets = []
-
         /** @type {string} code of app.js */
         this.appJSCode = null
-
         /** @type {function}:object function returning server info */
         this.getInfo = getInfo
-
         /** @type {http.Server} */
         this.server = http.createServer(::this.onRequest)
+
         this.server.on('error', err => ___x(err) || this.emit('error', err))
         this.server.on('connection', socket => this.sockets.push(socket))
     }
@@ -59,7 +54,7 @@ export default class FileServer extends EventEmitter {
      */
     listen() {
         return P(y => this.server.listen(this.port, y)).then(x => {
-            ____(`start listening ${this.host}:${this.port}`)
+            ____(`start listening ${this.port}`)
         })
     }
 
@@ -77,7 +72,6 @@ export default class FileServer extends EventEmitter {
         })
     }
 
-
     /**
      * @param {http.ServerRequest} req
      * @param {http.ServerResponse} res
@@ -92,6 +86,7 @@ export default class FileServer extends EventEmitter {
             if (url === '/info')   return this.responseServerInfo(res)
             if (url === '/kill')   return this.emitKilled(res)
             if (url === '/reload') return this.emitReload(res)
+            if (url.match(/^\/faster-titanium-web-js\//)) return this.responseWebJS(url, res)
 
             return this.responseResource(req, res)
 
@@ -109,9 +104,8 @@ export default class FileServer extends EventEmitter {
      */
     responseResource(req, res) {
         let url = urlParser(req.url).pathname
-        const platform  = req.headers['x-platform'] || 'iphone'
 
-        let responder = new ResourceResponder(this.projDir, url, platform)
+        let responder = new ResourceResponder(this.projDir, url, this.platformDirname)
         if (!responder.exists) {
             responder = new ResourceResponder(this.projDir, url)
         }
@@ -166,6 +160,12 @@ export default class FileServer extends EventEmitter {
         const data = this.getInfo()
 
         this.respond(res, 200, 'application/json', JSON.stringify(data))
+    }
+
+    responseWebJS(url, res) {
+        const jsName = url.slice('/faster-titanium-web-js/'.length)
+        const jsPath = resolve(__dirname, '../../dist/web', jsName)
+        this.respond(res, 200, 'text/javascript', read(jsPath))
     }
 
 
