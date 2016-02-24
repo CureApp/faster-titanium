@@ -134,8 +134,6 @@ function generateNewAppJS(fPort, ePort, host) {
 
     const opts = JSON.stringify({ fPort, ePort, host })
 
-    this.logger.info(`[FasterTitanium] call faster-titanium with options: ${opts} in app.js`)
-
     const initialCode = `Ti.FasterTitanium.run(this, ${opts})`
     const tiEntry = resolve(__dirname, '../titanium/faster-titanium') // dist/titanium/faster-titanium
 
