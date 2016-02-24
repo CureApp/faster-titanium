@@ -1,5 +1,6 @@
 
-import {readFile} from 'fs'
+import { resolve } from 'path'
+import { readFile } from 'fs'
 import ResponseInfo from './response-info'
 import ResourceLoader from './resource-loader'
 import AppJsConverter from './app-js-converter'

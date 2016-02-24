@@ -1,6 +1,5 @@
 "use strict";
 
-import { resolve } from 'path'
 import debug from 'debug'
 import { readFileSync as read } from 'fs'
 import http from 'http'
