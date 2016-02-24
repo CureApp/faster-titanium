@@ -9,7 +9,7 @@ describe('RequireAgent', ()=> {
 
         it('creates module from source', ()=> {
 
-            const reqAgent = new RequireAgent('dummy', 3000, 'iphone')
+            const reqAgent = new RequireAgent(require, 'localhost', 3000)
 
             const source = `
                 module.exports = function(a) { return a + ' faster titanium' }
@@ -22,9 +22,24 @@ describe('RequireAgent', ()=> {
         })
 
 
+        it('creates module from source with __dirname and __filename variables', ()=> {
+
+            const reqAgent = new RequireAgent(require, 'localhost', 3000)
+
+            const source = `
+                module.exports = __dirname + ' ' + __filename
+            `
+
+            const mod = reqAgent.createModule('foo/bar', source)
+
+            assert(typeof mod.exports === 'string')
+            assert(mod.exports === 'foo bar')
+        })
+
+
         it('creates module from source with no exports', ()=> {
 
-            const reqAgent = new RequireAgent('dummy', 3000, 'iphone')
+            const reqAgent = new RequireAgent(require, 'localhost', 3000)
 
             const source = `
                 var a = 'faster titanium'
@@ -40,7 +55,7 @@ describe('RequireAgent', ()=> {
 
         it('cannot create module from source with syntax error', ()=> {
 
-            const reqAgent = new RequireAgent('dummy', 3000, 'iphone')
+            const reqAgent = new RequireAgent(require, 'localhost', 3000)
 
             const source = `
                 var a = 'faster titanium
@@ -62,7 +77,8 @@ describe('RequireAgent', ()=> {
 
         it('require from server when not cached.', ()=> {
 
-            const reqAgent = new RequireAgent('dummy', 3000, 'iphone')
+            const reqAgent = new RequireAgent(require, 'localhost', 3000)
+
 
             reqAgent.getServerSource = (name) => `module.exports = "${name}"` // mocking
 
@@ -75,7 +91,7 @@ describe('RequireAgent', ()=> {
 
         it('require from cache when cached.', ()=> {
 
-            const reqAgent = new RequireAgent('dummy', 3000, 'iphone')
+            const reqAgent = new RequireAgent(require, 'localhost', 3000)
 
             let counter = 0
 
