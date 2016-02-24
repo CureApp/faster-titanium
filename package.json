@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.5.1",
+    "babel-plugin-transform-object-assign": "^6.5.0",
     "babel-preset-es2015": "^6.5.0",
     "babel-preset-stage-0": "^6.5.0",
     "esdoc": "^0.4.4",
