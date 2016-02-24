@@ -4,6 +4,7 @@ import debug from 'debug'
 import FileServer from './file-server'
 import FileWatcher from './file-watcher'
 import EventServer from './event-server'
+import ContentResponder from './content-responder'
 import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
 import { isAppJS } from '../common/util'
@@ -37,20 +38,18 @@ export default class MainProcess {
         /** @type {Preferences} */
         this.prefs = new Preferences()
         /** @type {FileServer} */
-        this.fServer = new FileServer(this.projDir, this.platform, fPort, ::this.getInfo)
+        this.fServer = new FileServer(fPort, this.routes)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
         /** @type {EventServer} */
         this.eServer = new EventServer(ePort)
-        /** @type {AlloyCompiler} */
-        this.compiler = new AlloyCompiler(this.projDir, this.platform)
 
         this.registerListeners()
     }
 
     /** @type {string} */
     get url() {
-        return `http://${this.host}:${this.fServer.port}/`
+        return `http://${this.host}:${this.fPort}/`
     }
 
     /** @type {number} */
@@ -76,9 +75,8 @@ export default class MainProcess {
 
         this.watcher.on('change', ::this.onResourceFileChanged)
         this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
-        this.fServer.on('got-kill-message', ::this.end)
-        this.fServer.on('got-reload-message', x => this.sendReload({force: true}))
     }
+
 
     /**
      * launch fileserver and eventserver
@@ -127,28 +125,28 @@ export default class MainProcess {
     onResourceFileChanged(path) {
         ____(`changed: ${path}`)
 
-        if (isAppJS(this.projDir, path)) {
-            this.fServer.clearAppJSCache()
-        }
         this.sendReload({timer: 1000})
     }
 
     /**
-     * called when files in app directory (Alloy project) changed
+     * Called when files in app directory (Alloy project) changed
+     * Compile alloy. During compilation, unwatch Resources directory.
      * @param {string} path
      * @private
      */
     onAlloyFileChanged(path) {
-        if (path === this.projDir + '/app/alloy.js') {
-            this.fServer.clearAppJSCache()
-        }
 
         ____(`changed:alloy ${path}`)
 
         this.send({event: 'will-reload'})
 
-        this.compileAlloy(path)
+        this.watcher.unwatchResources()
+
+        /** @type {AlloyCompiler} */
+        const compiler = new AlloyCompiler(this.projDir, this.platform)
+        return compiler.compile(path)
             .catch(___x)
+            .then(x => this.watcher.watchResources())
             .then(x => this.sendReload({reserved: true}))
     }
 
@@ -173,26 +171,39 @@ export default class MainProcess {
         this.send(payload)
     }
 
+    get routes() {
+        const responder = new ContentResponder()
+        return [
+            ['/', url =>
+                responder.webUI()],
 
-    /**
-     * compile alloy when one of the files in alloy changes
-     * @param {string} path
-     * @private
-     */
-    compileAlloy(path) {
+            ['/info', url =>
+                responder.respondJSON(this.info)],
 
-        this.watcher.unwatchResources()
+            ['/kill', url => {
+                process.nextTick(::this.end)
+                return responder.respond()
+            }],
 
-        return this.compiler.compile(path)
-            .then(x => this.watcher.watchResources())
+            ['/reload', url => {
+                this.sendReload({force: true})
+                return responder.respond()
+            }],
+
+            [/^\/faster-titanium-web-js\//, url =>
+                responder.webJS(url.slice('/faster-titanium-web-js/'.length))],
+
+            [/^\//, url => // any URL
+                responder.resource(url, this.projDir, this.platform)],
+        ]
     }
 
 
     /**
-     * get information of FasterTitanium process
-     * @return {Object}
+     * information of FasterTitanium process
+     * @type {Object}
      */
-    getInfo() {
+    get info() {
         return {
             'project root'     : this.projdir,
             'event server port': this.ePort,

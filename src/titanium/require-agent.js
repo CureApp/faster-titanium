@@ -90,8 +90,8 @@ export default class RequireAgent {
     createModule(moduleName, source) {
         const mod = new Module(moduleName)
 
-        const fn = Function('exports, require, module', source)
-        fn(mod.exports, (v => this.requireRaw(v, mod)), mod)
+        const fn = Function('exports, require, module, __dirname, __filename', source)
+        fn(mod.exports, (v => this.requireRaw(v, mod)), mod, mod.__dirname, mod.__filename)
 
         return mod
     }
