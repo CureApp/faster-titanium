@@ -12,6 +12,10 @@ import { isAppJS } from '../common/util'
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = debug('faster-titanium:MainProcess:error')
 
+process.on('uncaughtException', (err) => {
+    console.log(`Caught exception: ${err}`)
+})
+
 
 /**
  * main process
@@ -148,6 +152,7 @@ export default class MainProcess {
             .catch(___x)
             .then(x => this.watcher.watchResources())
             .then(x => this.sendReload({reserved: true}))
+            .catch(___x)
     }
 
     /**
