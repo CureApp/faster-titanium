@@ -12,7 +12,6 @@ machine:
     pre:
         - "git config --global user.name 'CircleCI'"
         - "git config --global user.email 'circleci@cureapp.jp'"
-    timezone: Asia/Tokyo
     node:
         version: 4.2.6
 dependencies:

@@ -61,7 +61,6 @@
   },
   "node-circleci-autorelease": {
     "machine": {
-      "timezone": "Asia/Tokyo",
       "node": {
         "version": "4.2.6"
       }
