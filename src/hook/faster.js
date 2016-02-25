@@ -79,6 +79,7 @@ export function launchServers(data, finished) {
         return this.ftProcess.launchServers()
     })
     .then(x => finished(null, data), finished)
+    .catch(finished)
 }
 
 /**
@@ -122,7 +123,7 @@ export function manipulateAppJS(data, finished) {
         write(newSrc, code)
         finished(null, data)
     })
-    .catch(e => finished(e))
+    .catch(finished)
 }
 
 
