@@ -60,12 +60,11 @@ export function attachFasterFlag(data) {
  * launch file/event servers to communicate with App
  */
 export function launchServers(data, finished) {
+    if (!this.cli.argv.faster) return finished(null, data);
 
-    const { faster,
-            platform,
+    const { platform,
             'ft-port': port = 4157,
             'project-dir': projectDir } = this.cli.argv
-    if (!faster) return finished(null, data);
 
     return getPorts(port).then(ports => {
 
@@ -103,8 +102,8 @@ export function getPorts(defaultPort) {
  * @private (export for test)
  */
 export function manipulateAppJS(data, finished) {
-    const { faster, 'project-dir': projectDir } = this.cli.argv
-    if (!faster) return finished(null, data);
+    if (!this.cli.argv.faster) return finished(null, data);
+    const { 'project-dir': projectDir } = this.cli.argv
 
     const [src, dest] = data.args
 
@@ -130,6 +129,7 @@ export function manipulateAppJS(data, finished) {
 /**
  * Generate new app.js code.
  * New app.js consists of bundled lib of faster-titanium and one line initializer
+ * @private
  */
 function generateNewAppJS(fPort, ePort, host) {
 
@@ -151,6 +151,7 @@ function generateNewAppJS(fPort, ePort, host) {
  * start watching files
  */
 function startWatching() {
+    if (!this.cli.argv.faster) return;
     this.ftProcess.watch()
 }
 
@@ -159,6 +160,7 @@ function startWatching() {
  * show server information
  */
 function showServerInfo() {
+    if (!this.cli.argv.faster) return;
     this.logger.info(`
 
         Access to FasterTitanium Web UI
