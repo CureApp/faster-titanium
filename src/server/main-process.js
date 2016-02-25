@@ -10,7 +10,8 @@ import Preferences from '../common/preferences'
 import { isAppJS } from '../common/util'
 
 const ____ = debug('faster-titanium:MainProcess')
-const ___x = debug('faster-titanium:MainProcess:error')
+const ___x = (e) =>
+    debug('faster-titanium:MainProcess:error')(e) || debug('faster-titanium:MainProcess:error')(e.stack)
 
 process.on('uncaughtException', (err) => {
     console.log(`Caught exception: ${err}`)
