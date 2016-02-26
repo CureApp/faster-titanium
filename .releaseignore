@@ -10,3 +10,4 @@ circle.yml
 npm-debug.log
 esdoc.json
 .babelrc
+.node-version
