@@ -117,11 +117,20 @@ export default class FasterTitanium {
                 this.reload(payload)
                 break
             case 'reflect':
-                this.reflect()
+                this.reflect(payload)
                 break
             default:
                 break
         }
+    }
+
+    reflect(options = {}) {
+        if (!options.names) return;
+
+        options.names.forEach(name => {
+            ____(`clearing cache ${name}`)
+            this.reqAgent.clearCache(name)
+        })
     }
 
 
@@ -154,7 +163,7 @@ export default class FasterTitanium {
             }
             catch(e) {
                 ____('reload')
-                this.reqAgent.clearCache()
+                this.reqAgent.clearAllCaches()
                 this.reqAgent.require('app')
             }
         }, timer)

@@ -51,22 +51,6 @@ export default class FileWatcher extends EventEmitter {
 
 
     /**
-     * unwatch Resources dir (called in alloy compilation)
-     */
-    unwatchResources() {
-        ____(`unwatching Resources dir`)
-        this.watcher.unwatch(join(this.projDir, 'Resources'))
-    }
-
-    /**
-     * (resume) watching Resources dir
-     */
-    watchResources() {
-        ____(`restart watching Resources dir`)
-        this.watcher.add(join(this.projDir, 'Resources'))
-    }
-
-    /**
      * stop watching
      */
     close() {

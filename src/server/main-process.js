@@ -7,11 +7,13 @@ import NotificationServer from './notification-server'
 import ContentResponder from './content-responder'
 import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
-import { isAppJS } from '../common/util'
+import { isAppJS, modNameByPath } from '../common/util'
 
+const wait = (msec => new Promise(y => setTimeout(y, msec)))
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = (e) =>
     debug('faster-titanium:MainProcess:error')(e) || debug('faster-titanium:MainProcess:error')(e.stack)
+
 
 process.on('uncaughtException', (err) => {
     console.log(`Caught exception: ${err}`)
@@ -48,6 +50,8 @@ export default class MainProcess {
         this.watcher = new FileWatcher(this.projDir)
         /** @type {NotificationServer} */
         this.nServer = new NotificationServer(nPort)
+        /** @type {number} #ongoing alloy compilation */
+        this.alloyCompilations = 0
 
         this.registerListeners()
     }
@@ -128,9 +132,11 @@ export default class MainProcess {
      * @private
      */
     onResourceFileChanged(path) {
+        if (this.alloyCompilations > 0) return;
+
         ____(`changed: ${path}`)
 
-        this.sendReload({timer: 1000})
+        this.sendEvent({timer: 1000, names: [modNameByPath(path, this.projDir, this.platform)]})
     }
 
     /**
@@ -145,15 +151,23 @@ export default class MainProcess {
 
         this.send({event: 'will-reload'})
 
-        this.watcher.unwatchResources()
+        this.alloyCompilations++
+
+        const changedFiles = []
+        const poolChanged = path => changedFiles.push(modNameByPath(path, this.projDir, this.platform))
+
+        this.watcher.on('change:Resources', poolChanged)
+
 
         /** @type {AlloyCompiler} */
         const compiler = new AlloyCompiler(this.projDir, this.platform)
         return compiler.compile(path)
             .catch(___x)
-            .then(x => this.watcher.watchResources())
-            .then(x => this.sendReload({reserved: true}))
+            .then(x => wait(100)) // waiting for all change:Resources events are emitted
+            .then(x => this.sendEvent({reserved: true, names: changedFiles}))
             .catch(___x)
+            .then(x => this.watcher.removeListener('change:Resources', poolChanged))
+            .then(x => this.alloyCompilations--)
     }
 
     /**
@@ -166,16 +180,32 @@ export default class MainProcess {
         this.nServer.send(payload)
     }
 
+
     /**
-     * send reload message to all connected clients
+     * send reload|reflect event to the titanium client
      * @param {Object} [options={}]
      * @return {Promise}
      * @private
      */
-    sendReload(options = {}) {
-        const payload = Object.assign({}, {event: 'reload'}, options)
+    sendEvent(options = {}) {
+        let eventName;
+
+        switch (this.prefs.style) {
+            case 'manual':
+                return
+            case 'auto-reload':
+                eventName = 'reload'
+                break
+            case 'auto-reflect':
+                eventName = 'reflect'
+                break
+        }
+
+        const payload = Object.assign({}, {event: eventName}, options)
+
         this.send(payload)
     }
+
 
     get routes() {
         const responder = new ContentResponder()
@@ -192,7 +222,7 @@ export default class MainProcess {
             }],
 
             ['/reload', url => {
-                this.sendReload({force: true})
+                this.send({event: 'reload', force: true})
                 return responder.respond()
             }],
 
@@ -211,12 +241,12 @@ export default class MainProcess {
      */
     get info() {
         return {
-            'project root'               : this.projdir,
-            'notification server port'   : this.nPort,
-            'process uptime'             : process.uptime() + ' [sec]',
-            'platform'                   : this.platform,
-            'loading style'              : this.prefs.style
-            //'Reloaded Times'           : this.stats.reloadedTimes
+            'project root'                   : this.projdir,
+            'notification server port'       : this.nPort,
+            'process uptime'                 : process.uptime() + ' [sec]',
+            'platform'                       : this.platform,
+            'loading style'                  : this.prefs.style,
+            //'Reloaded Times'               : this.stats.reloadedTimes
         }
     }
 }

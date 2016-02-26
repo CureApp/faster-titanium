@@ -128,13 +128,22 @@ export default class RequireAgent {
 
 
     /**
+     * clear cache by name
+     */
+    clearCache(name) {
+        delete this.modules[name]
+    }
+
+
+    /**
      * clear all module caches
      */
-    clearCache() {
+    clearAllCaches() {
         for (key in this.modules) {
-            delete this.modules[key]
+            this.clearCache(key)
         }
     }
+
 }
 
 
