@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html>
 <head>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 <style>
 body {
     width: 700px;
     margin: 40px auto;
 }
-#reload-btn {
+.nice-button {
     width: 200px;
     margin: 30px auto;
 }
 
-#reload-btn>a {
+.nice-button>a {
     cursor: pointer;
     display: inline-block;
     width: 200px;
@@ -21,27 +22,35 @@ body {
     line-height: 54px;
     outline: none;
 }
-#reload-btn>a:before,
-#reload-btn>a:after {
+.nice-button>a:before,
+.nice-button>a:after {
     position: absolute;
     z-index: -1;
     display: block;
     content: '';
 }
-#reload-btn>a,
-#reload-btn>a:before,
-#reload-btn>a::after {
+.nice-button>a,
+.nice-button>a:before,
+.nice-button>a::after {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
-    -webkit-transition: all .3s;
-    transition: all .3s;
+    -webkit-transition: background-color .3s;
+    transition: background-color .3s;
+
 }
-#reload-btn>a {
+.nice-button>a {
     background-color: #333;
     color: #fff;
 }
-#reload-btn>a:hover {
+.nice-button>a:hover {
+    background-color: #59b1eb;
+}
+
+#loading-style-value {
+    cursor: pointer;
+}
+tr:hover>#loading-style-value {
     background-color: #59b1eb;
 }
 
@@ -144,6 +153,63 @@ table tr:hover td{
     background: -moz-linear-gradient(top,  #f2f2f2,  #f0f0f0);    
 }
 
+#overlay {
+    visibility: hidden;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width:100%;
+    height:100%;
+    text-align:center;
+    z-index: 1000;
+    border-radius: 3px;
+    background: rgba(50,50,50, 0.6);
+}
+
+#overlay>div {
+    margin: 200px auto;
+    background: rgba(255,255,255, 1);
+    width: 400px;
+    height: 300px;
+    border-radius: 6px;
+    box-shadow: rgba(113, 135, 164, 0.65098) 0px 0px 6px 3px;
+}
+
+#overlay>div>p {
+    padding: 10px;
+    font-weight: bold;
+    font-size: 16px;
+    background: #ededed;
+    background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#ebebeb));
+    background: -moz-linear-gradient(top,  #ededed,  #ebebeb);
+    border-radius:6px;
+    color: rgba(80, 80, 80, 1);
+}
+
+#overlay select {
+    width: 250px;
+    font-size: 20px;
+    color: rgba(100, 100, 100, 1);
+    border: 1px solid #ddd;
+}
+
+#loading-style-description {
+    width: 250px;
+    margin: 10px auto;
+    height: 60px;
+    font-size: 12px;
+    color: rgba(140, 140, 140, 1);
+}
+
+#overlay option {
+    cursor: pointer;
+}
+#overlay option:hover {
+    background-color: #666;
+    color: #fff;
+}
+
+
 </style>
 </head>
 <script src="/faster-titanium-web-js/main.js"></script>
@@ -156,6 +222,18 @@ table tr:hover td{
 <tbody id="infoTableBody">
 </tbody>
 </table>
-<div id="reload-btn"><a onClick="main.reload()">Reload App</a></div>
+<div class="nice-button" id="reload-btn"><a onClick="main.reload()">Reload App</a></div>
+<div id="overlay" onClick="main.toggleSelectionModal(event)">
+  <div>
+    <p>Choose the loading style.</p>
+    <div id="loading-style-description"></div>
+    <select size="3">
+        <option onmouseover="main.showStyleDescription(1)" value="1">auto-reload</option>
+        <option onmouseover="main.showStyleDescription(2)" value="2">auto-reflect</option>
+        <option onmouseover="main.showStyleDescription(3)" value="3">manual</option>
+    </select>
+    <div class="nice-button" id="change-loading-style-btn"><a onClick="main.changeLoadingStyle()">Change</a></div>
+  </div>
+</div>
 </body>
 </html>

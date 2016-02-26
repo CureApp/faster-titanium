@@ -1,6 +1,7 @@
 
 import { resolve } from 'path'
 import { readFile } from 'fs'
+import browserify from 'browserify'
 import ResponseInfo from './response-info'
 import ResourceLoader from './resource-loader'
 import AppJsConverter from './app-js-converter'
@@ -68,13 +69,20 @@ export default class ContentResponder {
     }
 
     /**
-     * load dist/web/*.js
-     * @param {string} jsName
+     * load dist/web/main.js after bundling by browserify
      * @return {Promise<ResponseInfo>}
+     * @todo cache the result
      */
-    webJS(jsName) {
-        const jsPath = resolve(__dirname, '../../dist/web', jsName)
-        return this.respondFile(jsPath, 'text/javascript')
+    webJS() {
+        const mainJSPath = resolve(__dirname, '../../dist/web/main.js')
+        return this.bundle(mainJSPath).then(buf => this.respond(buf, 'text/javascript'))
+
+    }
+
+    bundle(file, options) {
+        return new Promise((y, n) => {
+            browserify(file, options).bundle((e, o) => e ? n(e) : y(o))
+        })
     }
 
     /**

@@ -226,8 +226,17 @@ export default class MainProcess {
                 return responder.respond()
             }],
 
-            [/^\/faster-titanium-web-js\//, url =>
-                responder.webJS(url.slice('/faster-titanium-web-js/'.length))],
+            ['/faster-titanium-web-js/main.js', url => responder.webJS()],
+
+            [/\/loading-style\/[0-9]$/, url => {
+                const newValue = parseInt(url.slice(-1))
+                const expression = Preferences.expressions[newValue]
+                if (!expression) {
+                    return responder.notFound(url)
+                }
+                this.prefs.loadStyleNum = newValue
+                return responder.respondJSON({newValue, expression})
+            }],
 
             [/^\//, url => // any URL
                 responder.resource(url, this.projDir, this.platform)],
