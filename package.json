@@ -4,11 +4,12 @@
   "description": "faster Titanium",
   "main": "index.js",
   "directories": {
-    "test": "spec"
+    "test": "spec",
+    "bin": "dist/bin"
   },
   "scripts": {
-    "postinstall": "node bin/install.js",
-    "preuninstall": "node bin/uninstall.js",
+    "postinstall": "dist/bin/faster-ti install",
+    "preuninstall": "dist/bin/faster-ti uninstall",
     "test": "mocha --compilers js:espower-babel/guess spec/**/*.spec.js",
     "build": "babel src -d dist",
     "launch-app": "ti build -p ios --faster --project-dir test/faster-titanium-app",

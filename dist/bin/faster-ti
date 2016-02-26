@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+const fs = require('fs')
+const program = require('commander')
+    .version(require(__dirname + '/../../package.json').version)
+
+const subcommands = {
+    restart: 'restart server',
+    install: 'install faster-titanium',
+    uninstall: 'uninstall faster-titanium',
+}
+
+Object.keys(subcommands)
+    .filter(function(sub) { return fs.existsSync(__filename + '-' + sub + '.js')})
+    .forEach(function(sub) { program.command(sub, subcommands[sub]) })
+
+program.parse(process.argv)
