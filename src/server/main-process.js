@@ -78,7 +78,7 @@ export default class MainProcess {
         this.eServer.on('error', ___x)
         this.watcher.on('error', ___x)
 
-        this.watcher.on('change', ::this.onResourceFileChanged)
+        this.watcher.on('change:Resources', ::this.onResourceFileChanged)
         this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
     }
 

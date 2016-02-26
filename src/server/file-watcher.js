@@ -92,7 +92,7 @@ export default class FileWatcher extends EventEmitter {
             this.emit('change:alloy', path)
         }
         else {
-            this.emit('change', path)
+            this.emit('change:Resources', path)
         }
     }
 
