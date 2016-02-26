@@ -84,11 +84,23 @@ describe('AppJsConverter', ()=> {
 
         const newCode = new AppJsConverter(origCode).convert()
 
-        console.log(newCode)
-
         const expected = `this['a'] = 1;this['b'] = require('b'); this['c'] = undefined;`
 
         assert(newCode === expected)
     })
+
+
+    it('converts variable declaration containing multi-byte characters', ()=> {
+
+        const origCode = `var ft = "速すぎるTitanium";\n var ft2 = 'faster-titanium'`
+
+        const newCode = new AppJsConverter(origCode).convert()
+
+        const expected = `this['ft'] = "速すぎるTitanium";\n this['ft2'] = 'faster-titanium';`
+
+        assert(newCode === expected)
+    })
+
+
 })
 

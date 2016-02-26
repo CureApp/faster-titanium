@@ -94,6 +94,7 @@ export default class ContentResponder {
      */
     resource(url, projDir, platform) {
 
+        // @type Buffer
         let content = new ResourceLoader(url, projDir, platform).content
         if (content === null) {
             return this.notFound(url)
@@ -105,7 +106,7 @@ export default class ContentResponder {
          * TODO Caches the result.
          */
         if (url === '/app.js') {
-            content = new AppJsConverter(content).convert()
+            content = new AppJsConverter(content.toString()).convert()
         }
 
         return this.respond(content)
