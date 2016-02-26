@@ -3,7 +3,12 @@
 import Preferences from '../common/preferences'
 const wait = (msec => new Promise(y => setTimeout(y, msec)))
 
-const arrow = '&nbsp;<i class="fa fa-arrow-circle-right"></i>'
+const fa = (name, style = {}) => {
+    let styleStr = Object.keys(style).map(k => `${k}:${style[k]}`).join(';')
+    if (styleStr) styleStr = `style="${styleStr}"`
+    return `<i ${styleStr} class="fa fa-${name}"></i>`
+}
+
 
 class Main {
 
@@ -38,7 +43,11 @@ class Main {
      */
     infoValueTD(k, v) {
         const modifiers = {
-            'loading style': v => `<td onClick="main.toggleSelectionModal()" id="loading-style-value">${v}${arrow}`
+            'loading style': v =>
+                `<td onClick="main.toggleSelectionModal()" id="loading-style-value">${v}&nbsp;${fa('arrow-circle-right', {color: 'blue'})}`,
+
+            'connection with client': v =>
+                `<td style='font-size:30px'>${fa(v?'check':'close', {color: v?'green':'red'})}</td>`
         }
         return modifiers[k] ? modifiers[k](v) : `<td>${v}</td>`
     }
@@ -101,7 +110,7 @@ class Main {
         .then (res => res.json())
         .then (json => {
             return wait(300).then(x => {
-                td.innerHTML = json.expression + arrow
+                td.innerHTML = json.expression + '&nbsp;' + fa('arrow-circle-right', {color: 'blue'})
                 td.classList.add('changed')
                 return wait(1000)
             })
