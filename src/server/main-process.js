@@ -3,7 +3,7 @@
 import debug from 'debug'
 import FileServer from './file-server'
 import FileWatcher from './file-watcher'
-import EventServer from './event-server'
+import NotificationServer from './notification-server'
 import ContentResponder from './content-responder'
 import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
@@ -27,12 +27,12 @@ export default class MainProcess {
      * @param {string} projDir
      * @param {Object} [options={}]
      * @param {number} fPort port number of the file server
-     * @param {number} ePort port number of the event server
+     * @param {number} nPort port number of the notification server
      * @param {string} host host name or IP Address
      * @param {string} platform platform name (ios|android|mobileweb|windows)
      */
     constructor(projDir, options = {}) {
-        const { fPort, ePort, host, platform } = options
+        const { fPort, nPort, host, platform } = options
 
         /** @type {string} project dir */
         this.projDir = projDir
@@ -46,8 +46,8 @@ export default class MainProcess {
         this.fServer = new FileServer(fPort, this.routes)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
-        /** @type {EventServer} */
-        this.eServer = new EventServer(ePort)
+        /** @type {NotificationServer} */
+        this.nServer = new NotificationServer(nPort)
 
         this.registerListeners()
     }
@@ -63,8 +63,8 @@ export default class MainProcess {
     }
 
     /** @type {number} */
-    get ePort() {
-        return this.eServer.port
+    get nPort() {
+        return this.nServer.port
     }
 
     /**
@@ -75,7 +75,7 @@ export default class MainProcess {
     registerListeners() {
 
         this.fServer.on('error', ___x)
-        this.eServer.on('error', ___x)
+        this.nServer.on('error', ___x)
         this.watcher.on('error', ___x)
 
         this.watcher.on('change:Resources', ::this.onResourceFileChanged)
@@ -84,7 +84,7 @@ export default class MainProcess {
 
 
     /**
-     * launch fileserver and eventserver
+     * launch file server and notification server
      * @return {Promise}
      * @public
      */
@@ -92,7 +92,7 @@ export default class MainProcess {
         ____(`launching servers`)
         return Promise.all([
             this.fServer.listen(),
-            this.eServer.listen()
+            this.nServer.listen()
         ]).catch(___x)
     }
 
@@ -116,7 +116,7 @@ export default class MainProcess {
         ____(`terminating servers`)
         Promise.all([
             this.fServer.close(),
-            this.eServer.close(),
+            this.nServer.close(),
             this.watcher.close()
         ])
     }
@@ -157,13 +157,13 @@ export default class MainProcess {
     }
 
     /**
-     * send message to the client of event server
+     * send message to the client of notification server
      * @param {Object} payload
      * @param {string} payload.event event name. oneof will-reload|reload|reflect
      */
     send(payload) {
         console.assert(payload && payload.event)
-        this.eServer.send(payload)
+        this.nServer.send(payload)
     }
 
     /**
@@ -211,12 +211,12 @@ export default class MainProcess {
      */
     get info() {
         return {
-            'project root'     : this.projdir,
-            'event server port': this.ePort,
-            'process uptime'   : process.uptime() + ' [sec]',
-            'platform'         : this.platform,
-            'loading style'    : this.prefs.style
-            //'Reloaded Times' : this.stats.reloadedTimes
+            'project root'               : this.projdir,
+            'notification server port'   : this.nPort,
+            'process uptime'             : process.uptime() + ' [sec]',
+            'platform'                   : this.platform,
+            'loading style'              : this.prefs.style
+            //'Reloaded Times'           : this.stats.reloadedTimes
         }
     }
 }

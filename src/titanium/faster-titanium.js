@@ -12,7 +12,7 @@ export default class FasterTitanium {
      * @param {Object} g global object of Titanium environment
      * @param {Object} options
      * @param {number} options.fPort port number of file server
-     * @param {number} options.ePort port number of event server
+     * @param {number} options.nPort port number of notification server
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     static run(g, options) {
@@ -26,12 +26,12 @@ export default class FasterTitanium {
      * @param {Object} g global object of Titanium environment
      * @param {Object} options
      * @param {number} options.fPort port number of file server
-     * @param {number} options.ePort port number of event server
+     * @param {number} options.nPort port number of notification server
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     constructor(g, options = {}) {
 
-        const { fPort, ePort, host = 'localhost' } = options
+        const { fPort, nPort, host = 'localhost' } = options
 
         /** @type {Object} global object of Titanium environment */
         this.global = g
@@ -42,8 +42,8 @@ export default class FasterTitanium {
         /** @type {number} @private */
         this.reservedReload = 0
         /** @type {Socket} file server URL */
-        this.socket = new Socket({host: host, port: parseInt(ePort, 10)})
-        this.socket.onConnection(x => ____(`Connection established to ${host}:${ePort}`))
+        this.socket = new Socket({host: host, port: parseInt(nPort, 10)})
+        this.socket.onConnection(x => ____(`Connection established to ${host}:${nPort}`))
 
         this.registerListeners()
     }
@@ -61,7 +61,7 @@ export default class FasterTitanium {
 
 
     /**
-     * connect to event server and begin app with the given code
+     * connect to notification server and begin app with the given code
      */
     startApp() {
         this.socket.connect()
@@ -103,7 +103,7 @@ export default class FasterTitanium {
 
 
     /**
-     * event listener called when the event server sends payload
+     * event listener called when the notification server sends payload
      * @param {string} payload (can be parsed as JSON)
      */
     onPayload(payload) {

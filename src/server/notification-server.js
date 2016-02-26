@@ -4,14 +4,14 @@ import net from 'net'
 import FileWatcher from './file-watcher'
 import {EventEmitter} from 'events'
 const P = f => new Promise(f)
-const ____ = debug('faster-titanium:EventServer')
-const ___x = debug('faster-titanium:EventServer:error')
+const ____ = debug('faster-titanium:NotificationServer')
+const ___x = debug('faster-titanium:NotificationServer:error')
 
 /**
  * Server connecting continuously with Titanium App.
  * Restrict connection: only one device can connect to the server.
  */
-export default class EventServer extends EventEmitter {
+export default class NotificationServer extends EventEmitter {
 
     /**
      * @param {string} [port]
