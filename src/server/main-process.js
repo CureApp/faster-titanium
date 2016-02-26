@@ -1,6 +1,7 @@
 "use strict";
 
 import debug from 'debug'
+import chalk from 'chalk'
 import FileServer from './file-server'
 import FileWatcher from './file-watcher'
 import NotificationServer from './notification-server'
@@ -56,8 +57,8 @@ export default class MainProcess {
         this.registerListeners()
 
         process.on('exit', x => {
-            console.log(`You can restart faster-titanium server with the following command.\n`)
-            console.log(`faster-ti restart -f ${fPort} -n ${nPort} -p ${platform} ${projDir}`)
+            console.log(chalk.yellow(`You can restart faster-titanium server with the following command.\n`))
+            console.log(chalk.yellow(`faster-ti restart -f ${fPort} -n ${nPort} -p ${platform} ${projDir}`))
         })
     }
 

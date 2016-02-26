@@ -55,7 +55,10 @@ export default class FasterTitanium {
      */
     registerListeners() {
         this.socket.onData(::this.onPayload)
-        this.socket.onClose(x => alert('[FasterTitanium] TCP server is terminated.'))
+        this.socket.onClose(x => {
+            alert('[FasterTitanium] TCP server is terminated.')
+            this.connectLater(10)
+        })
         this.socket.onError(::this.socketError)
     }
 
