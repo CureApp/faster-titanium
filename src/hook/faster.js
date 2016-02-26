@@ -1,3 +1,5 @@
+import 'shelljs/global'
+import semver from 'semver'
 import {join, resolve, dirname} from 'path'
 import os from 'os'
 import { writeFileSync as write,
@@ -29,17 +31,46 @@ export function init(logger, config, cli) {
     const hooks = [
 
         ['build.config', scope::attachFasterFlag],
-        ['build.pre.compile', scope::launchServers], // attaches scope.ftProcess
+        ['build.pre.compile', scope::filter(launchServers)], // attaches scope.ftProcess
 
         // only ios and android have copyResource hook.
-        ['build.ios.copyResource',      { pre: scope::manipulateAppJS }],
-        ['build.android.copyResource',  { pre: scope::manipulateAppJS }],
+        ['build.ios.copyResource',      { pre: scope::filter(manipulateAppJS) }],
+        ['build.android.copyResource',  { pre: scope::filter(manipulateAppJS) }],
 
-        ['build.post.compile', scope::startWatching],
-        ['build.post.compile', scope::showServerInfo]
+        ['build.post.compile', scope::filter(startWatching)],
+        ['build.post.compile', scope::filter(showServerInfo)]
     ]
 
     hooks.forEach(args => cli.addHook.apply(cli, args))
+}
+
+/**
+ * check --faster flag, then execute given fn with error handling.
+ * "this" is "scope" defined in "init" function.
+ */
+export function filter(fn) {
+
+    return (data, finished) => {
+        if (!this.cli.argv.faster) return finished(null, data)
+
+        if (!this::isAlloyCompatible()) {
+            process.exit(1)
+        }
+
+        try {
+            const result = this::fn(data)
+            if (result && result.then) {// ducktyping Promise
+                result
+                    .then(x => finished(null, data), finished)
+            }
+            else {
+                finished(null, data)
+            }
+        }
+        catch (e) {
+            finished(e)
+        }
+    }
 }
 
 /**
@@ -58,9 +89,9 @@ export function attachFasterFlag(data) {
 
 /**
  * launch file/event servers to communicate with App
+ * @return {Promise}
  */
-export function launchServers(data, finished) {
-    if (!this.cli.argv.faster) return finished(null, data);
+export function launchServers(data) {
 
     const { platform,
             'ft-port': port = 4157,
@@ -77,8 +108,6 @@ export function launchServers(data, finished) {
         this.ftProcess = new MainProcess(projectDir, optsForServer)
         return this.ftProcess.launchServers()
     })
-    .then(x => finished(null, data), finished)
-    .catch(finished)
 }
 
 /**
@@ -100,14 +129,14 @@ export function getPorts(defaultPort) {
 /**
  * original app.js => app.js with faster-titanium
  * @private (export for test)
+ * @return {Promise}
  */
-export function manipulateAppJS(data, finished) {
-    if (!this.cli.argv.faster) return finished(null, data);
+export function manipulateAppJS(data) {
     const { 'project-dir': projectDir } = this.cli.argv
 
     const [src, dest] = data.args
 
-    if (!isAppJS(projectDir, src)) return finished(null, data);
+    if (!isAppJS(projectDir, src)) return;
 
     const newSrc = dirname(dest) + '/faster-titanium.js' // new src path is in build dir, just because it's temporary.
 
@@ -118,11 +147,9 @@ export function manipulateAppJS(data, finished) {
     const { fPort, ePort, host } = this.ftProcess
 
 
-    generateNewAppJS(fPort, ePort, host).then(code => {
+    return generateNewAppJS(fPort, ePort, host).then(code => {
         write(newSrc, code)
-        finished(null, data)
     })
-    .catch(finished)
 }
 
 
@@ -131,7 +158,7 @@ export function manipulateAppJS(data, finished) {
  * New app.js consists of bundled lib of faster-titanium and one line initializer
  * @private
  */
-function generateNewAppJS(fPort, ePort, host) {
+export function generateNewAppJS(fPort, ePort, host) {
 
     const opts = JSON.stringify({ fPort, ePort, host })
 
@@ -150,8 +177,7 @@ function generateNewAppJS(fPort, ePort, host) {
 /**
  * start watching files
  */
-function startWatching() {
-    if (!this.cli.argv.faster) return;
+export function startWatching() {
     this.ftProcess.watch()
 }
 
@@ -159,8 +185,7 @@ function startWatching() {
 /**
  * show server information
  */
-function showServerInfo() {
-    if (!this.cli.argv.faster) return;
+export function showServerInfo() {
     this.logger.info(`
 
         Access to FasterTitanium Web UI
@@ -200,4 +225,32 @@ export function multiplyRegistered() {
         .indexOf(__filename)
 
     return index > 0
+}
+
+
+/**
+ * Check if global alloy compatible with faster-titanium
+ * Global alloy is used to compile at first build in faster-titanium.
+ * Subsequent builds are done by alloy in faster-titanium's node_modules.
+ * If two alloy versions mismatch, the app can be broken.
+ *
+ * @return {boolean} is global alloy compatible with faster-titanium
+ */
+export function isAlloyCompatible() {
+    const alloyVer = which('alloy') && exec('alloy -v', {silent: true}).stdout.trim()
+    if (!alloyVer) return true // no alloy: OK
+
+    const versionRange = '>=1.7'
+
+    const isCompatible = semver.valid(alloyVer) && semver.satisfies(alloyVer, versionRange)
+
+    if (!isCompatible) {
+        this.logger.error(`
+            Invalid global alloy version "${alloyVer}".
+            To get "--faster" option enabled, global alloy version must satisfy with "${versionRange}".
+
+                npm install -g alloy
+        `)
+    }
+    return isCompatible
 }
