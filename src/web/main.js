@@ -49,7 +49,6 @@ class Main {
      * @param {Event} evt event object. If not given, toggle will be executed. Otherwise, toggling will be done only when evt.target is #overlay.
      */
     toggleSelectionModal(evt) {
-        console.log(evt)
         const el = document.getElementById('overlay')
         if (!evt || evt.target === el) {
             el.style.visibility = (el.style.visibility == 'visible') ? 'hidden' : 'visible'
@@ -94,13 +93,20 @@ class Main {
      * send custom loading style name to the server
      */
     changeLoadingStyle() {
+        const td = document.getElementById('loading-style-value')
         const val = document.querySelector('#overlay select').value
         this.toggleSelectionModal()
+
         fetch(`/loading-style/${val}`)
         .then (res => res.json())
         .then (json => {
-            document.getElementById('loading-style-value').innerText = json.expression + arrow
+            return wait(300).then(x => {
+                td.innerHTML = json.expression + arrow
+                td.classList.add('changed')
+                return wait(1000)
+            })
         })
+        .then (x => td.classList.remove('changed'))
     }
 }
 

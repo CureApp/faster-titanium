@@ -47,14 +47,6 @@ body {
     background-color: #59b1eb;
 }
 
-#loading-style-value {
-    cursor: pointer;
-}
-tr:hover>#loading-style-value {
-    background-color: #59b1eb;
-}
-
-
 table a:link {
     color: #666;
     font-weight: bold;
@@ -147,11 +139,26 @@ table tr:last-child td:last-child{
     -webkit-border-bottom-right-radius:3px;
     border-bottom-right-radius:3px;
 }
+
 table tr:hover td{
     background: #f2f2f2;
     background: -webkit-gradient(linear, left top, left bottom, from(#f2f2f2), to(#f0f0f0));
-    background: -moz-linear-gradient(top,  #f2f2f2,  #f0f0f0);    
+    background: -moz-linear-gradient(top,  #f2f2f2,  #f0f0f0);
 }
+
+#loading-style-value {
+    cursor: pointer;
+    -webkit-transition: background-color .3s;
+    transition: background-color .3s;
+}
+
+#loading-style-value.changed,
+#loading-style-value:hover {
+    background: #99c2f4;
+}
+
+
+
 
 #overlay {
     visibility: hidden;
