@@ -1,13 +1,13 @@
 import 'shelljs/global'
 import {resolve} from 'path'
-
-const log = ::console.log
+import chalk from 'chalk'
+const log = (str, color) => console.log(color ? chalk[color](str) : str)
 
 function run() {
-    log('begin installing faster-titanium')
+    log('begin uninstalling faster-titanium')
     const tiPath = which('titanium')
     if (!tiPath) {
-        log('titanium command not found. Finish installation.')
+        log('titanium command not found. Finish installation.', 'red')
         return
     }
 
@@ -15,11 +15,11 @@ function run() {
     const result = exec(`${tiPath} -q config paths.hooks -r ${hookPath}`)
 
     if (result.code) {
-        log('uninstallation failed')
-        log(result)
+        log('Uninstall failed.', 'red')
+        console.log(result)
     }
     else {
-        log('uninstallation succeeded')
+        log('Uninstall succeeded.', 'green')
     }
 }
 

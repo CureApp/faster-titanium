@@ -7,6 +7,7 @@ const subcommands = {
     restart: 'restart server',
     install: 'install faster-titanium',
     uninstall: 'uninstall faster-titanium',
+    installed: 'check if faster-titanium hook is installed',
 }
 
 Object.keys(subcommands)

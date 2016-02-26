@@ -2,6 +2,8 @@ import program from 'commander'
 import {statSync as stat} from 'fs'
 import {resolve} from 'path'
 import MainProcess from '../server/main-process'
+import chalk from 'chalk'
+const log = (str, color) => console.log(color ? chalk[color](str) : str)
 
 program
     .arguments('[proj-dir]')
@@ -14,23 +16,25 @@ program
 function run() {
 
     const projDir = program.args[0]
+    if (!projDir) return program.help()
 
-    const { fport, nport, platform } = program
+    const hasOptions = ['fport', 'nport', 'platform'].every(opt => {
+        const hasValue = program[opt] != null
+        return hasValue || log(`"${opt}" option wasn't passed.`, 'yellow')
+    })
+    if (!hasOptions) return program.help()
 
-    if (fport == null || nport == null || platform == null || projDir == null) {
-        return program.help()
-    }
     const opts = {
-        fPort: fport,
-        nPort: nport,
+        fPort: program.fport,
+        nPort: program.nport,
         host:  'localhost',
-        platform
+        platform: program.platform
     }
 
     const absProjDir = absolutePath(projDir)
 
     if (!isDirectory(absProjDir)) {
-        console.error(`${absProjDir} is not a valid directory.`)
+        log(`${absProjDir} is not a valid directory.`, 'red')
         program.help()
         return
     }
@@ -39,7 +43,11 @@ function run() {
 
     ftProcess.launchServers()
     ftProcess.watch()
-    console.log(`FasterTitanium launched with url : ${ftProcess.url}`)
+    log(`FasterTitanium successfully launched.`, 'green')
+    log(`\thttp server url: ${ftProcess.url}`, 'green')
+    log(`\tproject dir: ${ftProcess.projDir}`, 'green')
+    log(`\tplatform: ${ftProcess.platform}`, 'green')
+    log(`\tnotification server port: ${ftProcess.nPort}`, 'green')
 }
 
 
