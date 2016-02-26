@@ -31,8 +31,8 @@ export function init(logger, config, cli) {
     const hooks = [
 
         ['build.config', scope::attachFasterFlag],
+        ['build.pre.compile', scope::filter(isAlloyCompatible)],
         ['build.pre.compile', scope::filter(launchServers)], // attaches scope.ftProcess
-
         // only ios and android have copyResource hook.
         ['build.ios.copyResource',      { pre: scope::filter(manipulateAppJS) }],
         ['build.android.copyResource',  { pre: scope::filter(manipulateAppJS) }],
@@ -52,10 +52,6 @@ export function filter(fn) {
 
     return (data, finished) => {
         if (!this.cli.argv.faster) return finished(null, data)
-
-        if (!this::isAlloyCompatible()) {
-            process.exit(1)
-        }
 
         try {
             const result = this::fn(data)
@@ -230,15 +226,16 @@ export function multiplyRegistered() {
 
 /**
  * Check if global alloy compatible with faster-titanium
+ * Kill this process if not compatible.
  * Global alloy is used to compile at first build in faster-titanium.
  * Subsequent builds are done by alloy in faster-titanium's node_modules.
  * If two alloy versions mismatch, the app can be broken.
  *
- * @return {boolean} is global alloy compatible with faster-titanium
  */
 export function isAlloyCompatible() {
+
     const alloyVer = which('alloy') && exec('alloy -v', {silent: true}).stdout.trim()
-    if (!alloyVer) return true // no alloy: OK
+    if (!alloyVer) return; // no alloy: OK
 
     const versionRange = '>=1.7'
 
@@ -251,6 +248,6 @@ export function isAlloyCompatible() {
 
                 npm install -g alloy
         `)
+        process.exit(1)
     }
-    return isCompatible
 }
