@@ -54,6 +54,11 @@ export default class MainProcess {
         this.alloyCompilations = 0
 
         this.registerListeners()
+
+        process.on('exit', x => {
+            console.log(`You can restart faster-titanium server with the following command.\n`)
+            console.log(`faster-ti restart -f ${fPort} -n ${nPort} -p ${platform} ${projDir}`)
+        })
     }
 
     /** @type {string} */
