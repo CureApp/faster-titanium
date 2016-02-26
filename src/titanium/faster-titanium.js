@@ -39,8 +39,8 @@ export default class FasterTitanium {
         this.reqAgent = new RequireAgent(this.global.require, host, fPort)
         /** @type {string} file server URL */
         this.url = `http://${host}:${fPort}`
-        /** @type {number} @private */
-        this.reservedReload = 0
+        /** @type {number} the number of reload events excepted to occur @private */
+        this.expectedReloads = 0
         /** @type {Socket} file server URL */
         this.socket = new Socket({host: host, port: parseInt(nPort, 10)})
         this.socket.onConnection(x => ____(`Connection established to ${host}:${nPort}`))
@@ -110,8 +110,11 @@ export default class FasterTitanium {
         ____(`payload: ${JSON.stringify(payload)}`, 'trace')
 
         switch (payload.event) {
-            case 'will-reload':
-                this.reservedReload++
+            case 'alloy-compilation':
+                this.expectedReloads++
+                break
+            case 'alloy-compilation-done':
+                this.expectedReloads--
                 break
             case 'reload':
                 this.reload(payload)
@@ -137,22 +140,20 @@ export default class FasterTitanium {
     /**
      * reload this app
      * @param {Object} [options={}]
-     * @param {boolean} [options.reserved=false]
      * @param {number} [options.timer=0]
      * @param {boolean} [options.force=false]
      */
     reload(options = {}) {
 
-        const { reserved = false, timer = 0, force = false } = options
+        const { timer = 0, force = false } = options
 
-        if (reserved) { this.reservedReload-- }
-        this.reservedReload++
+        this.expectedReloads++
 
         setTimeout(x => {
-            this.reservedReload--
+            this.expectedReloads--
 
-            if (this.reservedReload > 0 && !force) {
-                return ____(`Reload suppressed because reserved reloads exists. Use web reload button to force reloading: ${this.url}`)
+            if (this.expectedReloads > 0 && !force) {
+                return ____(`Reload suppressed because unresolved alloy compilations exists. Use web reload button to force reloading: ${this.url}`)
             }
 
             this.socket.end()

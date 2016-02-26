@@ -149,11 +149,11 @@ export default class MainProcess {
 
         ____(`changed:alloy ${path}`)
 
-        this.send({event: 'will-reload'})
+        this.send({event: 'alloy-compilation'})
 
         this.alloyCompilations++
 
-        const changedFiles = []
+        const changedFiles = [] // files in Resources changed by alloy compilation
         const poolChanged = path => changedFiles.push(modNameByPath(path, this.projDir, this.platform))
 
         this.watcher.on('change:Resources', poolChanged)
@@ -163,8 +163,9 @@ export default class MainProcess {
         const compiler = new AlloyCompiler(this.projDir, this.platform)
         return compiler.compile(path)
             .catch(___x)
+            .then(x => this.send({event: 'alloy-compilation-done'}))
             .then(x => wait(100)) // waiting for all change:Resources events are emitted
-            .then(x => this.sendEvent({reserved: true, names: changedFiles}))
+            .then(x => this.sendEvent({names: changedFiles}))
             .catch(___x)
             .then(x => this.watcher.removeListener('change:Resources', poolChanged))
             .then(x => this.alloyCompilations--)
@@ -173,7 +174,7 @@ export default class MainProcess {
     /**
      * send message to the client of notification server
      * @param {Object} payload
-     * @param {string} payload.event event name. oneof will-reload|reload|reflect
+     * @param {string} payload.event event name. oneof alloy-compilation|alloy-compilation-done|reload|reflect
      */
     send(payload) {
         console.assert(payload && payload.event)
