@@ -39,12 +39,14 @@
   "preferGlobal": true,
   "dependencies": {
     "acorn": "^3.0.2",
-    "alloy": "^1.7.33",
+    "alloy": ">=1.7",
     "browserify": "^13.0.0",
     "chokidar": "^1.4.2",
     "debug": "^2.2.0",
     "openport": "0.0.4",
-    "shelljs": "^0.6.0"
+    "semver": "^5.1.0",
+    "shelljs": "^0.6.0",
+    "uglify-js": "^2.4.15"
   },
   "devDependencies": {
     "babel-cli": "^6.5.1",
