@@ -3,15 +3,17 @@
 import debug from 'debug'
 import FileServer from './file-server'
 import FileWatcher from './file-watcher'
-import EventServer from './event-server'
+import NotificationServer from './notification-server'
 import ContentResponder from './content-responder'
 import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
-import { isAppJS } from '../common/util'
+import { isAppJS, modNameByPath } from '../common/util'
 
+const wait = (msec => new Promise(y => setTimeout(y, msec)))
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = (e) =>
     debug('faster-titanium:MainProcess:error')(e) || debug('faster-titanium:MainProcess:error')(e.stack)
+
 
 process.on('uncaughtException', (err) => {
     console.log(`Caught exception: ${err}`)
@@ -27,12 +29,12 @@ export default class MainProcess {
      * @param {string} projDir
      * @param {Object} [options={}]
      * @param {number} fPort port number of the file server
-     * @param {number} ePort port number of the event server
+     * @param {number} nPort port number of the notification server
      * @param {string} host host name or IP Address
      * @param {string} platform platform name (ios|android|mobileweb|windows)
      */
     constructor(projDir, options = {}) {
-        const { fPort, ePort, host, platform } = options
+        const { fPort, nPort, host, platform } = options
 
         /** @type {string} project dir */
         this.projDir = projDir
@@ -46,8 +48,10 @@ export default class MainProcess {
         this.fServer = new FileServer(fPort, this.routes)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
-        /** @type {EventServer} */
-        this.eServer = new EventServer(ePort)
+        /** @type {NotificationServer} */
+        this.nServer = new NotificationServer(nPort)
+        /** @type {number} #ongoing alloy compilation */
+        this.alloyCompilations = 0
 
         this.registerListeners()
     }
@@ -63,8 +67,8 @@ export default class MainProcess {
     }
 
     /** @type {number} */
-    get ePort() {
-        return this.eServer.port
+    get nPort() {
+        return this.nServer.port
     }
 
     /**
@@ -75,16 +79,16 @@ export default class MainProcess {
     registerListeners() {
 
         this.fServer.on('error', ___x)
-        this.eServer.on('error', ___x)
+        this.nServer.on('error', ___x)
         this.watcher.on('error', ___x)
 
-        this.watcher.on('change', ::this.onResourceFileChanged)
+        this.watcher.on('change:Resources', ::this.onResourceFileChanged)
         this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
     }
 
 
     /**
-     * launch fileserver and eventserver
+     * launch file server and notification server
      * @return {Promise}
      * @public
      */
@@ -92,7 +96,7 @@ export default class MainProcess {
         ____(`launching servers`)
         return Promise.all([
             this.fServer.listen(),
-            this.eServer.listen()
+            this.nServer.listen()
         ]).catch(___x)
     }
 
@@ -116,7 +120,7 @@ export default class MainProcess {
         ____(`terminating servers`)
         Promise.all([
             this.fServer.close(),
-            this.eServer.close(),
+            this.nServer.close(),
             this.watcher.close()
         ])
     }
@@ -128,9 +132,11 @@ export default class MainProcess {
      * @private
      */
     onResourceFileChanged(path) {
+        if (this.alloyCompilations > 0) return;
+
         ____(`changed: ${path}`)
 
-        this.sendReload({timer: 1000})
+        this.sendEvent({timer: 1000, names: [modNameByPath(path, this.projDir, this.platform)]})
     }
 
     /**
@@ -143,39 +149,64 @@ export default class MainProcess {
 
         ____(`changed:alloy ${path}`)
 
-        this.send({event: 'will-reload'})
+        this.send({event: 'alloy-compilation'})
 
-        this.watcher.unwatchResources()
+        this.alloyCompilations++
+
+        const changedFiles = [] // files in Resources changed by alloy compilation
+        const poolChanged = path => changedFiles.push(modNameByPath(path, this.projDir, this.platform))
+
+        this.watcher.on('change:Resources', poolChanged)
+
 
         /** @type {AlloyCompiler} */
         const compiler = new AlloyCompiler(this.projDir, this.platform)
         return compiler.compile(path)
             .catch(___x)
-            .then(x => this.watcher.watchResources())
-            .then(x => this.sendReload({reserved: true}))
+            .then(x => this.send({event: 'alloy-compilation-done'}))
+            .then(x => wait(100)) // waiting for all change:Resources events are emitted
+            .then(x => this.sendEvent({names: changedFiles}))
             .catch(___x)
+            .then(x => this.watcher.removeListener('change:Resources', poolChanged))
+            .then(x => this.alloyCompilations--)
     }
 
     /**
-     * send message to the client of event server
+     * send message to the client of notification server
      * @param {Object} payload
-     * @param {string} payload.event event name. oneof will-reload|reload|reflect
+     * @param {string} payload.event event name. oneof alloy-compilation|alloy-compilation-done|reload|reflect
      */
     send(payload) {
         console.assert(payload && payload.event)
-        this.eServer.send(payload)
+        this.nServer.send(payload)
     }
 
+
     /**
-     * send reload message to all connected clients
+     * send reload|reflect event to the titanium client
      * @param {Object} [options={}]
      * @return {Promise}
      * @private
      */
-    sendReload(options = {}) {
-        const payload = Object.assign({}, {event: 'reload'}, options)
+    sendEvent(options = {}) {
+        let eventName;
+
+        switch (this.prefs.style) {
+            case 'manual':
+                return
+            case 'auto-reload':
+                eventName = 'reload'
+                break
+            case 'auto-reflect':
+                eventName = 'reflect'
+                break
+        }
+
+        const payload = Object.assign({}, {event: eventName}, options)
+
         this.send(payload)
     }
+
 
     get routes() {
         const responder = new ContentResponder()
@@ -192,12 +223,21 @@ export default class MainProcess {
             }],
 
             ['/reload', url => {
-                this.sendReload({force: true})
+                this.send({event: 'reload', force: true})
                 return responder.respond()
             }],
 
-            [/^\/faster-titanium-web-js\//, url =>
-                responder.webJS(url.slice('/faster-titanium-web-js/'.length))],
+            ['/faster-titanium-web-js/main.js', url => responder.webJS()],
+
+            [/\/loading-style\/[0-9]$/, url => {
+                const newValue = parseInt(url.slice(-1))
+                const expression = Preferences.expressions[newValue]
+                if (!expression) {
+                    return responder.notFound(url)
+                }
+                this.prefs.loadStyleNum = newValue
+                return responder.respondJSON({newValue, expression})
+            }],
 
             [/^\//, url => // any URL
                 responder.resource(url, this.projDir, this.platform)],
@@ -211,12 +251,12 @@ export default class MainProcess {
      */
     get info() {
         return {
-            'project root'     : this.projdir,
-            'event server port': this.ePort,
-            'process uptime'   : process.uptime() + ' [sec]',
-            'platform'         : this.platform,
-            'loading style'    : this.prefs.style
-            //'Reloaded Times' : this.stats.reloadedTimes
+            'project root'                   : this.projdir,
+            'notification server port'       : this.nPort,
+            'process uptime'                 : process.uptime() + ' [sec]',
+            'platform'                       : this.platform,
+            'loading style'                  : this.prefs.style,
+            //'Reloaded Times'               : this.stats.reloadedTimes
         }
     }
 }

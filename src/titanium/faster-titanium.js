@@ -12,7 +12,7 @@ export default class FasterTitanium {
      * @param {Object} g global object of Titanium environment
      * @param {Object} options
      * @param {number} options.fPort port number of file server
-     * @param {number} options.ePort port number of event server
+     * @param {number} options.nPort port number of notification server
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     static run(g, options) {
@@ -26,12 +26,12 @@ export default class FasterTitanium {
      * @param {Object} g global object of Titanium environment
      * @param {Object} options
      * @param {number} options.fPort port number of file server
-     * @param {number} options.ePort port number of event server
+     * @param {number} options.nPort port number of notification server
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     constructor(g, options = {}) {
 
-        const { fPort, ePort, host = 'localhost' } = options
+        const { fPort, nPort, host = 'localhost' } = options
 
         /** @type {Object} global object of Titanium environment */
         this.global = g
@@ -39,11 +39,11 @@ export default class FasterTitanium {
         this.reqAgent = new RequireAgent(this.global.require, host, fPort)
         /** @type {string} file server URL */
         this.url = `http://${host}:${fPort}`
-        /** @type {number} @private */
-        this.reservedReload = 0
+        /** @type {number} the number of reload events excepted to occur @private */
+        this.expectedReloads = 0
         /** @type {Socket} file server URL */
-        this.socket = new Socket({host: host, port: parseInt(ePort, 10)})
-        this.socket.onConnection(x => ____(`Connection established to ${host}:${ePort}`))
+        this.socket = new Socket({host: host, port: parseInt(nPort, 10)})
+        this.socket.onConnection(x => ____(`Connection established to ${host}:${nPort}`))
 
         this.registerListeners()
     }
@@ -61,7 +61,7 @@ export default class FasterTitanium {
 
 
     /**
-     * connect to event server and begin app with the given code
+     * connect to notification server and begin app with the given code
      */
     startApp() {
         this.socket.connect()
@@ -103,47 +103,57 @@ export default class FasterTitanium {
 
 
     /**
-     * event listener called when the event server sends payload
+     * event listener called when the notification server sends payload
      * @param {string} payload (can be parsed as JSON)
      */
     onPayload(payload) {
         ____(`payload: ${JSON.stringify(payload)}`, 'trace')
 
         switch (payload.event) {
-            case 'will-reload':
-                this.reservedReload++
+            case 'alloy-compilation':
+                this.expectedReloads++
+                break
+            case 'alloy-compilation-done':
+                this.expectedReloads--
                 break
             case 'reload':
                 this.reload(payload)
                 break
             case 'reflect':
-                this.reflect()
+                this.reflect(payload)
                 break
             default:
                 break
         }
     }
 
+    reflect(options = {}) {
+        if (!options.names) return;
+
+        options.names.forEach(name => {
+            ____(`clearing cache ${name}`)
+            this.reqAgent.clearCache(name)
+        })
+    }
+
 
     /**
      * reload this app
      * @param {Object} [options={}]
-     * @param {boolean} [options.reserved=false]
      * @param {number} [options.timer=0]
      * @param {boolean} [options.force=false]
      */
     reload(options = {}) {
 
-        const { reserved = false, timer = 0, force = false } = options
+        const { timer = 0, force = false } = options
 
-        if (reserved) { this.reservedReload-- }
-        this.reservedReload++
+        this.expectedReloads++
 
         setTimeout(x => {
-            this.reservedReload--
+            this.expectedReloads--
 
-            if (this.reservedReload > 0 && !force) {
-                return ____(`Reload suppressed because reserved reloads exists. Use web reload button to force reloading: ${this.url}`)
+            if (this.expectedReloads > 0 && !force) {
+                return ____(`Reload suppressed because unresolved alloy compilations exists. Use web reload button to force reloading: ${this.url}`)
             }
 
             this.socket.end()
@@ -154,7 +164,7 @@ export default class FasterTitanium {
             }
             catch(e) {
                 ____('reload')
-                this.reqAgent.clearCache()
+                this.reqAgent.clearAllCaches()
                 this.reqAgent.require('app')
             }
         }, timer)

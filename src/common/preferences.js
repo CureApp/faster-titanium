@@ -24,9 +24,9 @@ export default class Preferences {
 
     static get descriptions() {
         return {
-            [AUTO_RELOAD]: 'reload everytime a file changes',
-            [AUTO_REFLECT]: 'clear loaded modules in Titanium everytime a file changes (this may clear internal variables)',
-            [MANUAL]: 'do nothing'
+            [AUTO_RELOAD]: 'Reload everytime a file changes.',
+            [AUTO_REFLECT]: 'Clear loaded modules in Titanium everytime a file changes (this may clear internal variables).',
+            [MANUAL]: 'Do nothing.'
         }
     }
 

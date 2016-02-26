@@ -98,7 +98,7 @@ export function launchServers(data) {
         const optsForServer = {
             platform,
             fPort: ports[0],
-            ePort: ports[1],
+            nPort: ports[1],
             host : getAddress()
         }
         this.ftProcess = new MainProcess(projectDir, optsForServer)
@@ -140,10 +140,10 @@ export function manipulateAppJS(data) {
 
     data.args[0] = newSrc
 
-    const { fPort, ePort, host } = this.ftProcess
+    const { fPort, nPort, host } = this.ftProcess
 
 
-    return generateNewAppJS(fPort, ePort, host).then(code => {
+    return generateNewAppJS(fPort, nPort, host).then(code => {
         write(newSrc, code)
     })
 }
@@ -154,9 +154,9 @@ export function manipulateAppJS(data) {
  * New app.js consists of bundled lib of faster-titanium and one line initializer
  * @private
  */
-export function generateNewAppJS(fPort, ePort, host) {
+export function generateNewAppJS(fPort, nPort, host) {
 
-    const opts = JSON.stringify({ fPort, ePort, host })
+    const opts = JSON.stringify({ fPort, nPort, host })
 
     const initialCode = `Ti.FasterTitanium.run(this, ${opts})`
     const tiEntry = resolve(__dirname, '../titanium/faster-titanium') // dist/titanium/faster-titanium

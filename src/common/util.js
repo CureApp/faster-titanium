@@ -26,3 +26,22 @@ export function getPlatformDirname(platform) {
     }
     return platformInfo.titaniumFolder
 }
+
+export function modNameByPath(path, projectDir, platform) {
+    let relative = path.split(projectDir + '/Resources/')[1]
+
+    if (!relative) {
+        throw new Error(`invalid path for module name: ${path}`)
+    }
+
+    if (relative.match(/\.js$/)) {
+        relative = relative.slice(0, -3)
+    }
+
+    const platformDir = getPlatformDirname(platform)
+
+    if (relative.indexOf(platformDir + '/') === 0) {
+        return relative.split(platformDir + '/')[1]
+    }
+    return relative
+}
