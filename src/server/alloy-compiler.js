@@ -2,11 +2,14 @@
 import {exec} from 'child_process'
 import {relative, resolve} from 'path'
 import debug from 'debug'
+import AlloyCompilationState from '../common/alloy-compilation-state'
 import optimizeAlloy from './optimize-alloy'
 const alloyPath = resolve(__dirname, '../../node_modules/.bin/alloy')
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:AlloyCompiler')
+const ___x = debug('faster-titanium:AlloyCompiler:error')
 const ___o = v => ____(v) || v
+const wait = (msec => new Promise(y => setTimeout(y, msec)))
 
 
 /**
@@ -21,6 +24,7 @@ export default class AlloyCompiler {
         /** @type {string} */
         this.projDir = projDir
         this.platform = platform
+        this.acState = new AlloyCompilationState(false) // false: timeout = false
     }
 
     /** @type {string} */
@@ -39,22 +43,47 @@ export default class AlloyCompiler {
     }
 
     /**
-     * @param {string} path
-     * @return {Promise}
+     * is alloy compiling
+     * @type {boolean}
      */
-    compile(path) {
+    get compiling() {
+        return this.acState.compiling
+    }
 
-        if (path === this.alloyJSPath) return this.compileAlloyJS()
+    /**
+     * @param {string} path
+     * @param {string} token identifier for this compilation
+     * @return {Promise<string>}
+     */
+    compile(path, token) {
 
-        if (path === this.configPath) return this.compileConfig()
+        let compilation;
 
-        return this.compileFiles(path)
+        this.acState.started(token)
+
+        switch (path) {
+            case this.alloyJSPath:
+                compilation = this.compileAlloyJS()
+                break
+            case this.configPath:
+                compilation = this.compileConfig()
+                break
+            default:
+                compilation = this.compileFiles(path)
+                break
+        }
+
+        return compilation
+            .catch(___x)
+            .then(x => wait(200)) // set some time lag for file watcher
+            .then(x => this.acState.finished(token))
     }
 
 
     /**
      * @return {Promise}
      * @todo change deploytype by input
+     * @private
      */
     compileAlloyJS() {
 
@@ -62,13 +91,14 @@ export default class AlloyCompiler {
 
             const relPath = relative(this.projDir, this.alloyJSPath)
 
-            optimizeAlloy(this.projDir, relPath, {platform: this.platform, deploytype: 'development'})
+            return optimizeAlloy(this.projDir, relPath, {platform: this.platform, deploytype: 'development'})
         })
     }
 
     /**
      * @return {Promise}
      * @todo specific compilation
+     * @private
      */
     compileConfig() {
         return this.compileAlloyJS()
@@ -77,21 +107,23 @@ export default class AlloyCompiler {
     /**
      * @param {string} path
      * @return {Promise}
+     * @private
      */
     compileFiles(path) {
         const relPath = relative(this.projDir, path)
         const command = `${alloyPath} compile --config platform=${this.platform},file=${relPath}`
         ___o(command)
-        return P(y => exec(command, y))
+        return P(y => exec(command, {cwd: this.projDir}, y))
     }
 
     /**
      * compile all files
      * @deprecated
+     * @private
      */
     compileAll() {
         const command = `${alloyPath} compile --config platform=${this.platform}`
         ___o(command)
-        return P(y => exec(command, y))
+        return P(y => exec(command, {cwd: this.projDir}, y))
     }
 }
