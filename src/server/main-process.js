@@ -252,7 +252,7 @@ export default class MainProcess {
         return {
             'project root'                   : this.projdir,
             'notification server port'       : this.nPort,
-            'process uptime'                 : process.uptime() + ' [sec]',
+            'process uptime'                 : parseInt(process.uptime()) + ' [sec]',
             'platform'                       : this.platform,
             'connection with client'         : this.nServer.connected,
             'loading style'                  : this.prefs.style,

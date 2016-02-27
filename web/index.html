@@ -216,6 +216,16 @@ table tr:hover td{
     color: #fff;
 }
 
+.fa-refresh:hover {
+    color: #fd0;
+    cursor: pointer;
+}
+
+.fa-refresh:active{
+    color: #02f;
+    cursor: pointer;
+}
+
 
 </style>
 </head>
@@ -224,7 +234,7 @@ table tr:hover td{
 <pre id="notice"></pre>
 <table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
 <thead>
-<tr><th>Property Name</th><th>Value</th></tr><!-- Table Header -->
+<tr><th>Property Name</th><th>Value&nbsp;<i style="padding-left:10px;font-size:15px;" class="fa fa-refresh" onClick="main.showInfo()"></i></th></tr><!-- Table Header -->
 </thead>
 <tbody id="infoTableBody">
 </tbody>

@@ -43,11 +43,12 @@ class Main {
      */
     infoValueTD(k, v) {
         const modifiers = {
+
             'loading style': v =>
-                `<td onClick="main.toggleSelectionModal()" id="loading-style-value">${v}&nbsp;${fa('arrow-circle-right', {color: 'blue'})}`,
+                `<td onClick="main.toggleSelectionModal()" id="loading-style-value">${v}&nbsp;${fa('arrow-circle-right', {color: 'blue'})}</td>`,
 
             'connection with client': v =>
-                `<td style='font-size:30px'>${fa(v?'check':'close', {color: v?'green':'red'})}</td>`
+                `<td>${fa(v?'check':'close', {color: v?'green':'red', 'font-size': '30px'})}</td>`
         }
         return modifiers[k] ? modifiers[k](v) : `<td>${v}</td>`
     }
@@ -110,6 +111,7 @@ class Main {
         .then (res => res.json())
         .then (json => {
             return wait(300).then(x => {
+                td.innerHTML = json.expression + '&nbsp;' + fa('arrow-circle-right', {color: 'blue'})
                 td.innerHTML = json.expression + '&nbsp;' + fa('arrow-circle-right', {color: 'blue'})
                 td.classList.add('changed')
                 return wait(1000)
