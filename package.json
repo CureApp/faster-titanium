@@ -44,6 +44,7 @@
     "browserify": "^13.0.0",
     "chalk": "^1.1.1",
     "chokidar": "^1.4.2",
+    "commander": "^2.9.0",
     "debug": "^2.2.0",
     "openport": "0.0.4",
     "randomstring": "^1.1.4",
