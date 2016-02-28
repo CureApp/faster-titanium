@@ -2,6 +2,7 @@
   "name": "faster-titanium",
   "version": "1.6.5",
   "description": "faster Titanium",
+  "license": "MIT",
   "main": "index.js",
   "directories": {
     "test": "spec",
