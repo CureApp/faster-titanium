@@ -53,7 +53,7 @@ function run() {
 }
 
 export function showLogo() {
-    log(read(__dirname + '/../../doc/ft-txt-logo', 'utf8'), 'green')
+    log(read(__dirname + '/../../doc/txt-logo', 'utf8'), 'green')
     const {version, author} = require(__dirname + '/../../package.json')
     log(`\tFasterTitanium ${version} by ${author} Accelerate Titanium development.\n`, 'green')
 }

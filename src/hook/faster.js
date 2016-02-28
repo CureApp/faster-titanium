@@ -89,7 +89,7 @@ export function attachFasterFlag(data) {
  * @private (export for test)
  */
 export function showLogo() {
-    console.log(chalk.red(read(__dirname + '/../../doc/ft-txt-logo', 'utf8')))
+    console.log(chalk.red(read(__dirname + '/../../doc/txt-logo', 'utf8')))
     const {version, author} = require(__dirname + '/../../package.json')
     console.log(`\tFasterTitanium ${version} by ${author} Accelerate Titanium development.\n`)
 }
