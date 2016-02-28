@@ -33,6 +33,7 @@ export function init(logger, config, cli) {
 
         ['build.config', scope::attachFasterFlag],
         ['build.pre.compile', scope::filter(isAlloyCompatible)],
+        ['build.pre.compile', scope::filter(showLogo)],
         ['build.pre.compile', scope::filter(launchServers)], // attaches scope.ftProcess
         // only ios and android have copyResource hook.
         ['build.ios.copyResource',      { pre: scope::filter(manipulateAppJS) }],
@@ -82,6 +83,16 @@ export function attachFasterFlag(data) {
     options['ft-port'] = { default: 4157, desc: 'port number for faster-titanium http server. If not available, use another open port.' }
 }
 
+
+/**
+ * attach --faster flag
+ * @private (export for test)
+ */
+export function showLogo() {
+    console.log(chalk.red(read(__dirname + '/../../ft-txt-logo', 'utf8')))
+    const {version, author} = require(__dirname + '/../../package.json')
+    console.log(`\tFasterTitanium ${version} by ${author} Accelerate Titanium development.\n`)
+}
 
 
 /**

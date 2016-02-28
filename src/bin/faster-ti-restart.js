@@ -1,5 +1,5 @@
 import program from 'commander'
-import {statSync as stat} from 'fs'
+import {statSync as stat, readFileSync as read} from 'fs'
 import {resolve} from 'path'
 import MainProcess from '../server/main-process'
 import chalk from 'chalk'
@@ -39,6 +39,8 @@ function run() {
         return
     }
 
+    showLogo()
+
     const ftProcess = new MainProcess(absProjDir, opts)
 
     ftProcess.launchServers()
@@ -48,6 +50,12 @@ function run() {
     log(`\tproject dir: ${ftProcess.projDir}`, 'green')
     log(`\tplatform: ${ftProcess.platform}`, 'green')
     log(`\tnotification server port: ${ftProcess.nPort}`, 'green')
+}
+
+export function showLogo() {
+    log(read(__dirname + '/../../ft-txt-logo', 'utf8'), 'green')
+    const {version, author} = require(__dirname + '/../../package.json')
+    log(`\tFasterTitanium ${version} by ${author} Accelerate Titanium development.\n`, 'green')
 }
 
 
