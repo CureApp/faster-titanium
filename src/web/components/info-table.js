@@ -63,17 +63,22 @@ export default class InfoTable extends React.Component {
                     onMouseOver={x => this.setState({loadingStyleHighLight: true})}
                     onMouseOut={x => this.setState({loadingStyleHighLight: false})}>
                     {v}
-                    <Fa icon="arrow-circle-right" style={{color: 'blue', paddingLeft: 10}} />
+                    <Fa icon="arrow-circle-right" style={{color: '#39f', paddingLeft: 10}} />
                 </td>,
 
 
             'connection with client': v =>
-                <td>
-                    <Fa icon={v ?'check':'close'} style={{color: v?'green':'red', 'fontSize': 30}}/>
+                <td style={{cursor: 'pointer'}} onClick={::this.showConnectionHintModal}>
+                    <Fa icon={v ?'check':'close'} style={{color: v?'green':'red', fontSize: 30}}/>
+                    <Fa icon="question-circle" style={{color: '#39f', fontSize: 13, paddingLeft: 6, verticalAlign: '20%'}}/>
                 </td>
         }
 
         return modifiers[k] ? modifiers[k](v) : <td>{v}</td>
+    }
+
+    showConnectionHintModal() {
+        GlobalState.set('connectionHintModal', true)
     }
 
     showSelectionModal() {

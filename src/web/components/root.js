@@ -1,6 +1,7 @@
 import GlobalState from '../global-state'
 import InfoTable from './info-table'
 import SelectionModal from './selection-modal'
+import ConnectionHintModal from './connection-hint-modal'
 
 const wait = (msec => new Promise(y => setTimeout(y, msec)))
 
@@ -11,6 +12,7 @@ export default class Root extends React.Component {
         this.state = {
             notification: '',
             selectionModal: false,
+            connectionHintModal: false,
             tableInfo: {},
         }
 
@@ -36,6 +38,7 @@ export default class Root extends React.Component {
         return (
         <div>
             {this.state.selectionModal ? <SelectionModal /> : ''}
+            {this.state.connectionHintModal ? <ConnectionHintModal /> : ''}
             <pre>{this.state.notification}</pre>
             <InfoTable info={this.state.tableInfo} fetchInfo={::this.fetchInfo} />
             <div className="nice-button"><a onClick={::this.reload}>Reload App</a></div>
