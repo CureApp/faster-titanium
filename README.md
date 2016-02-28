@@ -105,8 +105,16 @@ Just copy and paste the line and you can restart the server!
 
 #### Uninstall --faster flag
 
+```bash
+faster-ti uninstall
+```
+
 Uninstalling FasterTitanium itself is
 
 ```bash
 npm uninstall -g faster-titanium
 ```
+
+
+## LICENSE
+MIT
