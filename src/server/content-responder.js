@@ -13,6 +13,11 @@ import AppJsConverter from './app-js-converter'
 export default class ContentResponder {
 
 
+    constructor() {
+        this.caches = {}
+    }
+
+
     /**
      * create ResponseInfo
      * @param {string|Buffer} content
@@ -51,6 +56,36 @@ export default class ContentResponder {
     }
 
     /**
+     * respond with cached content
+     * @param {string} id identifier
+     * @return {ResponseInfo}
+     */
+    responseCache(id) {
+        return Promise.resolve(this.caches[id])
+    }
+
+
+    /**
+     * check cache existence
+     * @param {string} id identifier
+     * @return {boolean}
+     */
+    hasCache(id) {
+        return !!this.caches[id]
+    }
+
+
+    /**
+     * cache the response
+     * @param {string} id identifier
+     * @param {ResponseInfo}
+     * @return {ResponseInfo}
+     */
+    cache(id, responseInfo) {
+        return this.caches[id] = responseInfo
+    }
+
+    /**
      * create ResponseInfo of NOT FOUND
      * @param {string} url
      * @return {Promise<ResponseInfo>}
@@ -74,10 +109,14 @@ export default class ContentResponder {
      * @todo cache the result
      */
     webJS() {
-        const mainJSPath = resolve(__dirname, '../../dist/web/main.js')
-        return this.bundle(mainJSPath).then(buf => this.respond(buf, 'text/javascript'))
+        if (this.hasCache('webJS')) return this.responseCache('webJS')
 
+        const mainJSPath = resolve(__dirname, '../../dist/web/main.js')
+        return this.bundle(mainJSPath)
+            .then(buf => this.respond(buf, 'text/javascript'))
+            .then(info => this.cache('webJS', info))
     }
+
 
     bundle(file, options) {
         return new Promise((y, n) => {
