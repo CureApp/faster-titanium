@@ -69,3 +69,44 @@ Clicking `Value` column of `loading style` enable you to select loading style.
 
 Default value is `auto-reload`.
 
+### CLI
+
+`faster-ti` command is available.
+
+#### Check --faster flag is installed correctly
+
+```bash
+faster-ti installed
+```
+
+#### (Re-)install --faster flag
+
+```bash
+faster-ti install
+```
+
+#### Restart the server
+If ti process is killed, FasterTitanium server is also killed.
+You can restart FasterTitanium server by the following command.
+
+```bash
+faster-ti restart -f <port number1> -n <port number2> -p <platform name> [project dir]
+```
+Too many options? No problem.
+
+When you terminate the ti process, the exact restart command will be shown in stdout at the end of process.
+![restart-cli](https://cureapp.github.io/faster-titanium/restart-cli.png)
+
+Just copy and paste the line and you can restart the server!
+
+![restart-cli-result](https://cureapp.github.io/faster-titanium/restart-cli-result.png)
+
+
+
+#### Uninstall --faster flag
+
+Uninstalling FasterTitanium itself is
+
+```bash
+npm uninstall -g faster-titanium
+```
