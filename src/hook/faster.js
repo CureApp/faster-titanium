@@ -10,7 +10,6 @@ import { writeFileSync as write,
 import op from 'openport'
 import MainProcess from '../server/main-process'
 import { isAppJS } from '../common/util'
-import browserify from 'browserify'
 import chalk from 'chalk'
 
 /**
@@ -137,7 +136,6 @@ export function getPorts(defaultPort) {
 /**
  * original app.js => app.js with faster-titanium
  * @private (export for test)
- * @return {Promise}
  */
 export function manipulateAppJS(data) {
     const { 'project-dir': projectDir } = this.cli.argv
@@ -154,10 +152,9 @@ export function manipulateAppJS(data) {
 
     const { fPort, nPort, host } = this.ftProcess
 
+    const code = generateNewAppJS(fPort, nPort, host)
 
-    return generateNewAppJS(fPort, nPort, host).then(code => {
-        write(newSrc, code)
-    })
+    write(newSrc, code)
 }
 
 
@@ -171,15 +168,9 @@ export function generateNewAppJS(fPort, nPort, host) {
     const opts = JSON.stringify({ fPort, nPort, host })
 
     const initialCode = `Ti.FasterTitanium.run(this, ${opts})`
-    const tiEntry = resolve(__dirname, '../titanium/faster-titanium') // dist/titanium/faster-titanium
+    const tiEntry = resolve(__dirname, '../../dist/titanium/faster-titanium.bundle.js')
 
-    return new Promise((y, n) => {
-        browserify(tiEntry).bundle((e, buf) => {
-            if (e) return n(e)
-
-            y([buf.toString(), initialCode].join('\n'))
-        })
-    })
+    return [read(tiEntry, 'utf8'), initialCode].join('\n')
 }
 
 /**
