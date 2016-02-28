@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8" />
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 <style>
 body {
@@ -146,101 +147,29 @@ table tr:hover td{
     background: -moz-linear-gradient(top,  #f2f2f2,  #f0f0f0);
 }
 
-#loading-style-value {
-    cursor: pointer;
-    -webkit-transition: background-color .3s;
-    transition: background-color .3s;
-}
 
-#loading-style-value.changed,
-#loading-style-value:hover {
-    background: #99c2f4;
-}
-
-
-
-
-#overlay {
-    visibility: hidden;
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    width:100%;
-    height:100%;
-    text-align:center;
-    z-index: 1000;
-    border-radius: 3px;
-    background: rgba(50,50,50, 0.6);
-}
-
-#overlay>div {
-    margin: 200px auto;
-    background: rgba(255,255,255, 1);
-    width: 400px;
-    height: 300px;
-    border-radius: 6px;
-    box-shadow: rgba(113, 135, 164, 0.65098) 0px 0px 6px 3px;
-}
-
-#overlay>div>p {
-    padding: 10px;
-    font-weight: bold;
-    font-size: 16px;
-    background: #ededed;
-    background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#ebebeb));
-    background: -moz-linear-gradient(top,  #ededed,  #ebebeb);
-    border-radius:6px;
-    color: rgba(80, 80, 80, 1);
-}
-
-#overlay select {
-    width: 250px;
-    font-size: 20px;
-    color: rgba(100, 100, 100, 1);
-    border: 1px solid #ddd;
-}
-
-#loading-style-description {
-    width: 250px;
-    margin: 10px auto;
-    height: 60px;
-    font-size: 12px;
-    color: rgba(140, 140, 140, 1);
-}
-
-#overlay option {
+option {
     cursor: pointer;
 }
-#overlay option:hover {
+option:hover {
     background-color: #666;
     color: #fff;
 }
 
+.fa-refresh:hover {
+    color: #fd0;
+    cursor: pointer;
+}
+
+.fa-refresh:active{
+    color: #02f;
+    cursor: pointer;
+}
 
 </style>
 </head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
 <script src="/faster-titanium-web-js/main.js"></script>
-<body>
-<pre id="notice"></pre>
-<table cellspacing='0'> <!-- cellspacing='0' is important, must stay -->
-<thead>
-<tr><th>Property Name</th><th>Value</th></tr><!-- Table Header -->
-</thead>
-<tbody id="infoTableBody">
-</tbody>
-</table>
-<div class="nice-button" id="reload-btn"><a onClick="main.reload()">Reload App</a></div>
-<div id="overlay" onClick="main.toggleSelectionModal(event)">
-  <div>
-    <p>Choose the loading style.</p>
-    <div id="loading-style-description"></div>
-    <select size="3">
-        <option onmouseover="main.showStyleDescription(1)" value="1">auto-reload</option>
-        <option onmouseover="main.showStyleDescription(2)" value="2">auto-reflect</option>
-        <option onmouseover="main.showStyleDescription(3)" value="3">manual</option>
-    </select>
-    <div class="nice-button" id="change-loading-style-btn"><a onClick="main.changeLoadingStyle()">Change</a></div>
-  </div>
-</div>
-</body>
+<body><div id="container" /></body>
 </html>

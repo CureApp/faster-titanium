@@ -1,6 +1,8 @@
 "use strict";
 
 import debug from 'debug'
+import chalk from 'chalk'
+import randomstring from 'randomstring'
 import FileServer from './file-server'
 import FileWatcher from './file-watcher'
 import NotificationServer from './notification-server'
@@ -9,7 +11,6 @@ import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
 import { isAppJS, modNameByPath } from '../common/util'
 
-const wait = (msec => new Promise(y => setTimeout(y, msec)))
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = (e) =>
     debug('faster-titanium:MainProcess:error')(e) || debug('faster-titanium:MainProcess:error')(e.stack)
@@ -50,10 +51,14 @@ export default class MainProcess {
         this.watcher = new FileWatcher(this.projDir)
         /** @type {NotificationServer} */
         this.nServer = new NotificationServer(nPort)
-        /** @type {number} #ongoing alloy compilation */
-        this.alloyCompilations = 0
-
+        /** @type {AlloyCompiler} */
+        this.alloyCompiler = new AlloyCompiler(this.projDir, this.platform)
         this.registerListeners()
+
+        process.on('exit', x => {
+            console.log(chalk.yellow(`You can restart faster-titanium server with the following command.\n`))
+            console.log(chalk.yellow(`faster-ti restart -f ${fPort} -n ${nPort} -p ${platform} ${projDir}`))
+        })
     }
 
     /** @type {string} */
@@ -132,7 +137,7 @@ export default class MainProcess {
      * @private
      */
     onResourceFileChanged(path) {
-        if (this.alloyCompilations > 0) return;
+        if (this.alloyCompiler.compiling) return;
 
         ____(`changed: ${path}`)
 
@@ -149,26 +154,20 @@ export default class MainProcess {
 
         ____(`changed:alloy ${path}`)
 
-        this.send({event: 'alloy-compilation'})
+        const token = randomstring.generate(10) // identifier for this compilation
 
-        this.alloyCompilations++
+        this.send({event: 'alloy-compilation', token})
 
         const changedFiles = [] // files in Resources changed by alloy compilation
         const poolChanged = path => changedFiles.push(modNameByPath(path, this.projDir, this.platform))
 
         this.watcher.on('change:Resources', poolChanged)
 
-
         /** @type {AlloyCompiler} */
-        const compiler = new AlloyCompiler(this.projDir, this.platform)
-        return compiler.compile(path)
-            .catch(___x)
-            .then(x => this.send({event: 'alloy-compilation-done'}))
-            .then(x => wait(100)) // waiting for all change:Resources events are emitted
-            .then(x => this.sendEvent({names: changedFiles}))
-            .catch(___x)
+        return this.alloyCompiler.compile(path, token)
             .then(x => this.watcher.removeListener('change:Resources', poolChanged))
-            .then(x => this.alloyCompilations--)
+            .then(x => this.send({event: 'alloy-compilation-done', token}))
+            .then(x => this.sendEvent({names: changedFiles}))
     }
 
     /**
@@ -253,8 +252,9 @@ export default class MainProcess {
         return {
             'project root'                   : this.projdir,
             'notification server port'       : this.nPort,
-            'process uptime'                 : process.uptime() + ' [sec]',
+            'process uptime'                 : parseInt(process.uptime()) + ' [sec]',
             'platform'                       : this.platform,
+            'connection with client'         : this.nServer.connected,
             'loading style'                  : this.prefs.style,
             //'Reloaded Times'               : this.stats.reloadedTimes
         }

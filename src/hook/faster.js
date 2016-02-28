@@ -11,6 +11,7 @@ import op from 'openport'
 import MainProcess from '../server/main-process'
 import { isAppJS } from '../common/util'
 import browserify from 'browserify'
+import chalk from 'chalk'
 
 /**
  * attach cli hooks to titanium CLI
@@ -184,8 +185,8 @@ export function startWatching() {
 export function showServerInfo() {
     this.logger.info(`
 
-        Access to FasterTitanium Web UI
-        ${this.ftProcess.url}
+        URL for FasterTitanium Web UI
+        ${chalk.green(this.ftProcess.url)}
     `)
 }
 

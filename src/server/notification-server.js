@@ -24,6 +24,13 @@ export default class NotificationServer extends EventEmitter {
         this.server.on('error', err => ___x(err) || this.emit('error', err))
     }
 
+
+    /** @type {boolean} */
+    get connected() {
+        return !!(this.client && this.client.writable)
+    }
+
+
     /**
      * listen
      * @public

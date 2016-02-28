@@ -1,6 +1,7 @@
 "use strict";
 import Socket from './socket'
 import RequireAgent from './require-agent'
+import AlloyCompilationState from '../common/alloy-compilation-state'
 
 const ____ = (v, type = 'log') => console[type]('[FasterTitanium]', v)
 
@@ -41,6 +42,10 @@ export default class FasterTitanium {
         this.url = `http://${host}:${fPort}`
         /** @type {number} the number of reload events excepted to occur @private */
         this.expectedReloads = 0
+        /** @type {AlloyCompilationState} */
+        this.acState = new AlloyCompilationState()
+        /** @type {number} counter, only used in reload()*/
+        this.willReload = 0
         /** @type {Socket} file server URL */
         this.socket = new Socket({host: host, port: parseInt(nPort, 10)})
         this.socket.onConnection(x => ____(`Connection established to ${host}:${nPort}`))
@@ -55,7 +60,10 @@ export default class FasterTitanium {
      */
     registerListeners() {
         this.socket.onData(::this.onPayload)
-        this.socket.onClose(x => alert('[FasterTitanium] TCP server is terminated.'))
+        this.socket.onClose(x => {
+            alert('[FasterTitanium] TCP server is terminated.')
+            this.connectLater(10)
+        })
         this.socket.onError(::this.socketError)
     }
 
@@ -111,10 +119,10 @@ export default class FasterTitanium {
 
         switch (payload.event) {
             case 'alloy-compilation':
-                this.expectedReloads++
+                this.acState.started(payload.token)
                 break
             case 'alloy-compilation-done':
-                this.expectedReloads--
+                this.acState.finished(payload.token)
                 break
             case 'reload':
                 this.reload(payload)
@@ -127,6 +135,9 @@ export default class FasterTitanium {
         }
     }
 
+    /**
+     * clear existing caches of the changed modules
+     */
     reflect(options = {}) {
         if (!options.names) return;
 
@@ -147,13 +158,13 @@ export default class FasterTitanium {
 
         const { timer = 0, force = false } = options
 
-        this.expectedReloads++
+        this.willReload++
 
         setTimeout(x => {
-            this.expectedReloads--
+            this.willReload--
 
-            if (this.expectedReloads > 0 && !force) {
-                return ____(`Reload suppressed because unresolved alloy compilations exists. Use web reload button to force reloading: ${this.url}`)
+            if ((this.acState.compiling || this.willReload > 0) && !force) {
+                return ____(`Reload suppressed because ongoing alloy compilations exist. Use web reload button to force reloading: ${this.url}`)
             }
 
             this.socket.end()
