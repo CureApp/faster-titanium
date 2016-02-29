@@ -12,6 +12,8 @@ export default class LogSender {
      */
     constructor(socket, options = {}) {
         this.socket = socket
+        this.enabled = false
+
         const {localLog = true, serverLog = true} = options
         /** @type {boolean} show log in local */
         this.localLog  = localLog
@@ -19,6 +21,14 @@ export default class LogSender {
         this.serverLog = serverLog
         this.TiAPI = Ti.API
         this.console = console
+    }
+
+    enable() {
+        this.enabled = true
+    }
+
+    disable() {
+        this.enabled = false
     }
 
     /**
@@ -32,7 +42,7 @@ export default class LogSender {
             ['info', 'trace', 'warn', 'debug', 'critical', 'error'].forEach(severity => {
                 const fn = this.TiAPI[severity]
                 API[severity] = (...args) => {
-                    if (this.serverLog) this.send(args, severity)
+                    if (this.enabled && this.serverLog) this.send(args, severity)
                     if (this.localLog)  fn.apply(this.TiAPI, args)
                 }
             })

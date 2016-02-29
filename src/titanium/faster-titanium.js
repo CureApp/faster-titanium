@@ -96,6 +96,7 @@ export default class FasterTitanium {
             if (this.connected) {
                 this.showDialog('TCP server is terminated. \n(This dialog will be closed in 3sec.)', 3000)
             }
+            this.logSender.disable()
             this.connected = false
             this.connectLater(10)
         })
@@ -184,6 +185,7 @@ export default class FasterTitanium {
         switch (payload.event) {
             case 'connected':
                 this.connected = true
+                this.logSender.enable()
                 ____(`Connection established to ${this.socket.url}`)
                 break
             case 'alloy-compilation':

@@ -9,6 +9,7 @@ import NotificationServer from './notification-server'
 import ContentResponder from './content-responder'
 import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
+import TiLog from './ti-log'
 import { isAppJS, modNameByPath } from '../common/util'
 
 const ____ = debug('faster-titanium:MainProcess')
@@ -147,7 +148,7 @@ export default class MainProcess {
      */
     tilog(payload) {
         const { args, severity } = payload
-        console.log(`[${severity}]`, ...payload.args)
+        TiLog[severity](args)
     }
 
 
