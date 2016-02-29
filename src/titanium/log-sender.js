@@ -26,18 +26,21 @@ export default class LogSender {
      * @return {LogSender} this
      */
     define() {
-        const API = {};
+        try {
+            const API = {};
 
-        ['info', 'trace', 'warn', 'debug', 'critical', 'error'].forEach(severity => {
-            const fn = this.TiAPI[severity]
-            API[severity] = (...args) => {
-                if (this.serverLog) this.send(args, severity)
-                if (this.localLog)  fn.apply(this.TiAPI, args)
-            }
-        })
-        Ti.API = API
-        console = API
-        console.log = console.info
+            ['info', 'trace', 'warn', 'debug', 'critical', 'error'].forEach(severity => {
+                const fn = this.TiAPI[severity]
+                API[severity] = (...args) => {
+                    if (this.serverLog) this.send(args, severity)
+                    if (this.localLog)  fn.apply(this.TiAPI, args)
+                }
+            })
+            Ti.API = API
+            console = API
+            console.log = console.info
+        }
+        catch (e) {}
 
         return this
     }
