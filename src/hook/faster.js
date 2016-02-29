@@ -240,8 +240,12 @@ export function multiplyRegistered() {
  */
 export function isAlloyCompatible() {
 
-    const alloyVer = which('alloy') && exec('alloy -v', {silent: true}).stdout.trim()
+    const alloyPath = which('alloy')
+
+    const alloyVer = alloyPath && exec(`${alloyPath} -v`, {silent: true}).stdout.trim()
     if (!alloyVer) return; // no alloy: OK
+
+    const isGlobalAlloy = !!alloyPath.match('^/usr')
 
     const versionRange = '>=1.7'
 
@@ -249,10 +253,12 @@ export function isAlloyCompatible() {
 
     if (!isCompatible) {
         this.logger.error(`
-            Invalid global alloy version "${alloyVer}".
+            Invalid alloy version "${alloyVer}".
+            (alloy path = ${alloyPath})
+
             To get "--faster" option enabled, global alloy version must satisfy with "${versionRange}".
 
-                npm install -g alloy
+                npm install ${isGlobalAlloy ? '-g ' : ''}alloy
         `)
         process.exit(1)
     }
