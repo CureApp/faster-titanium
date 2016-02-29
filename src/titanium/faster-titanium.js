@@ -77,10 +77,27 @@ export default class FasterTitanium {
     registerListeners() {
         this.socket.onData(::this.onPayload)
         this.socket.onClose(x => {
-            alert('[FasterTitanium] TCP server is terminated.')
+            this.showDialog('TCP server is terminated. \n(This dialog will be closed in 3sec.)', 3000)
             this.connectLater(10)
         })
         this.socket.onError(::this.socketError)
+    }
+
+
+    /**
+     * Show dialog with given message
+     * The dialog will close in {msec} milliseconds.
+     * @param {string} message
+     * @param {number} msec
+     */
+    showDialog(message, msec = 3000) {
+        const dialog = Ti.UI.createAlertDialog({
+            title: 'FasterTitanium',
+            message
+        })
+
+        dialog.show()
+        setTimeout(x => dialog.hide(), msec)
     }
 
 
