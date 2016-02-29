@@ -29,14 +29,17 @@ export default class MainProcess {
     /**
      * @param {string} projDir
      * @param {Object} [options={}]
-     * @param {number} fPort port number of the file server
-     * @param {number} nPort port number of the notification server
-     * @param {string} host host name or IP Address
-     * @param {string} platform platform name (ios|android|mobileweb|windows)
+     * @param {number} [options.fPort] port number of the file server
+     * @param {number} [options.nPort] port number of the notification server
+     * @param {string} [options.host] host name or IP Address
+     * @param {string} [options.platform] platform name (ios|android|mobileweb|windows)
+     * @param {string} [options.token] identifier for this process
      */
     constructor(projDir, options = {}) {
-        const { fPort, nPort, host, platform, tiDebug } = options
+        const { fPort, nPort, host, platform, tiDebug, token } = options
 
+        /** @type {string} identifier for this process */
+        this.token = token || randomstring.generate(10)
         /** @type {string} project dir */
         this.projDir = projDir
         /** @type {string} hostname or IP Address */
@@ -46,19 +49,24 @@ export default class MainProcess {
         /** @type {Preferences} */
         this.prefs = new Preferences({tiDebug})
         /** @type {FileServer} */
-        this.fServer = new FileServer(fPort, this.routes)
+        this.fServer = new FileServer(fPort, this.token, this.routes)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
         /** @type {NotificationServer} */
-        this.nServer = new NotificationServer(nPort)
+        this.nServer = new NotificationServer(nPort, this.token)
         /** @type {AlloyCompiler} */
         this.alloyCompiler = new AlloyCompiler(this.projDir, this.platform)
         this.registerListeners()
 
         process.on('exit', x => {
             console.log(chalk.yellow(`You can restart faster-titanium server with the following command.\n`))
-            console.log(chalk.yellow(`faster-ti restart -f ${fPort} -n ${nPort} -p ${platform} ${projDir}`))
+            console.log(chalk.yellow(this.restartCommand))
         })
+    }
+
+    /** @type {string} */
+    get restartCommand() {
+        return `faster-ti restart -f ${this.fPort} -n ${this.nPort} -p ${this.platform} -t ${this.token} ${this.projDir}`
     }
 
     /** @type {string} */
@@ -269,7 +277,8 @@ export default class MainProcess {
      */
     get info() {
         return {
-            'project root'                    : this.projdir,
+            'access token'                    : this.token,
+            'project root'                    : this.projDir,
             'notification server port'        : this.nPort,
             'process uptime'                  : parseInt(process.uptime()) + ' [sec]',
             'platform'                        : this.platform,

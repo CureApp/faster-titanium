@@ -13,6 +13,11 @@ export default class Socket {
         this.proxy = this.createTCPSocket()
     }
 
+    /** @type {string} */
+    get url() {
+        return `${this.host}:${this.port}`
+    }
+
 
     /**
      * connect to TCP server
@@ -68,8 +73,22 @@ export default class Socket {
         })
     }
 
+    /**
+     * send payload to server
+     * @param {Object} payload
+     */
     send(payload) {
         const buf = Ti.createBuffer({value: JSON.stringify(payload) + '\n'})
+        const bytes = this.proxy.write(buf)
+    }
+
+
+    /**
+     * send string to server
+     * @param {string} str
+     */
+    sendText(str) {
+        const buf = Ti.createBuffer({value: str})
         const bytes = this.proxy.write(buf)
     }
 

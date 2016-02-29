@@ -153,9 +153,9 @@ export function manipulateAppJS(data) {
 
     data.args[0] = newSrc
 
-    const { fPort, nPort, host } = this.ftProcess
+    const { fPort, nPort, host, token } = this.ftProcess
 
-    const code = generateNewAppJS(fPort, nPort, host)
+    const code = generateNewAppJS(fPort, nPort, host, token)
 
     write(newSrc, code)
 }
@@ -166,9 +166,9 @@ export function manipulateAppJS(data) {
  * New app.js consists of bundled lib of faster-titanium and one line initializer
  * @private
  */
-export function generateNewAppJS(fPort, nPort, host) {
+export function generateNewAppJS(fPort, nPort, host, token) {
 
-    const opts = JSON.stringify({ fPort, nPort, host })
+    const opts = JSON.stringify({ fPort, nPort, host, token })
 
     const initialCode = `Ti.FasterTitanium.run(this, ${opts})`
     const tiEntry = resolve(__dirname, '../../dist/titanium/faster-titanium.bundle.js')

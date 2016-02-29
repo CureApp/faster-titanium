@@ -18,13 +18,17 @@ const ___x = debug('faster-titanium:FileServer:error')
 export default class FileServer extends EventEmitter {
 
     /**
-     * @param {number} [port=4157]
+     * @param {number} port
+     * @param {string} token
+     * @param {Array} routes
      */
-    constructor(port = 4157, routes) {
+    constructor(port, token, routes) {
         super()
 
         /** @type {number} */
         this.port = parseInt(port, 10)
+        /** @type {string} */
+        this.token = token
         /** @type {Array<Array>} */
         this.routes = routes
         /** @type {net.Socket[]} */
