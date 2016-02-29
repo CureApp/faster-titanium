@@ -1,3 +1,4 @@
+import postPreferences from '../post-preferences'
 import Fa from './fa'
 import GlobalState from '../global-state'
 
@@ -73,15 +74,35 @@ export default class InfoTable extends React.Component {
                     <Fa icon="question-circle" style={{color: '#39f', fontSize: 13, paddingLeft: 6, verticalAlign: '20%'}}/>
                 </td>,
 
-
-            'show debug log in Titanium': v =>
-                <td style={{cursor: 'pointer'}} onClick={::this.props.toggleTiDebug}>
-                    <Fa icon={v ?'toggle-on':'toggle-off'} style={{color: v?'green':'gray', fontSize: 30}}/>
-                </td>,
+            'show debug log in Titanium': (v, k) => this.getSwitchUI(v, k, 'tiDebug'),
+            'show ti log in server console': (v, k) => this.getSwitchUI(v, k, 'serverLog'),
+            'show ti log in titanium console': (v, k) => this.getSwitchUI(v, k, 'localLog'),
         }
 
-        return modifiers[k] ? modifiers[k](v) : <td>{v}</td>
+        return modifiers[k] ? modifiers[k](v, k) : <td>{v}</td>
     }
+
+
+    /**
+     * binary switch in <td>
+     * click => send server and flip the value
+     * @param {boolean} bool the value
+     * @param {string} propName table property name
+     * @param {string} prefKey a property name of Preferences object
+     */
+    getSwitchUI(bool, propName, prefKey) {
+        const onClick = (evt) => {
+            postPreferences({[prefKey]: !bool})
+            .then(json => GlobalState.set('tableInfo', propName, !bool))
+        }
+
+        return (
+        <td style={{cursor: 'pointer'}} onClick={onClick}>
+            <Fa icon={bool ?'toggle-on':'toggle-off'} style={{color: bool?'green':'gray', fontSize: 30}}/>
+        </td>
+        )
+    }
+
 
     showConnectionHintModal() {
         GlobalState.set('connectionHintModal', true)

@@ -120,7 +120,7 @@ export default class NotificationServer extends EventEmitter {
                 this.emit('log', payload)
                 break
             default:
-                console.log(payload)
+                // console.log(payload)
                 break
         }
     }

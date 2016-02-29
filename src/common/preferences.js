@@ -35,7 +35,7 @@ export default class Preferences {
         const {loadStyleNum = AUTO_RELOAD, tiDebug = false, serverLog = true, localLog = false} = options
 
         /** @type {number} load style type */
-        this.loadStyleNum = options.loadStyle || AUTO_RELOAD
+        this.loadStyleNum = loadStyleNum
         /** @type {boolean} whether to show titanium log in server console */
         this.tiDebug = tiDebug
         /** @type {boolean} whether to show titanium log in server console */

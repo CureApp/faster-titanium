@@ -238,7 +238,7 @@ export default class MainProcess {
 
             ['/prefs', 'POST', (url, body) => {
                 this.prefs.apply(body)
-                this.send({event: 'prefs', value: this.prefs})
+                this.send({event: 'preferences', prefs: this.prefs})
                 return responder.respondJSON(this.prefs)
             }],
 

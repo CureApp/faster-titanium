@@ -1,5 +1,4 @@
 import GlobalState from '../global-state'
-import postPreferences from '../post-preferences'
 import InfoTable from './info-table'
 import SelectionModal from './selection-modal'
 import ConnectionHintModal from './connection-hint-modal'
@@ -41,7 +40,7 @@ export default class Root extends React.Component {
             {this.state.selectionModal ? <SelectionModal /> : ''}
             {this.state.connectionHintModal ? <ConnectionHintModal /> : ''}
             <pre>{this.state.notification}</pre>
-            <InfoTable info={this.state.tableInfo} fetchInfo={::this.fetchInfo} toggleTiDebug={::this.toggleTiDebug} />
+            <InfoTable info={this.state.tableInfo} fetchInfo={::this.fetchInfo} />
             <div className="nice-button"><a onClick={::this.reload}>Reload App</a></div>
         </div>
         )
@@ -63,12 +62,4 @@ export default class Root extends React.Component {
             })
     }
 
-
-    toggleTiDebug() {
-        const tiDebug = ! this.state.tableInfo['show debug log in Titanium']
-        postPreferences({tiDebug})
-        .then(json => {
-            GlobalState.set('tableInfo', 'show debug log in Titanium', tiDebug)
-        })
-    }
 }

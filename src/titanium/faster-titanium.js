@@ -1,4 +1,5 @@
 "use strict";
+import Preferences from '../common/preferences'
 import Socket from './socket'
 import RequireAgent from './require-agent'
 import AlloyCompilationState from '../common/alloy-compilation-state'
@@ -37,8 +38,6 @@ export default class FasterTitanium {
 
         const { fPort, nPort, host = 'localhost', debugMode } = options
 
-        this.fetchPreferences(host, fPort)
-
         /** @type {Object} global object of Titanium environment */
         this.global = g
         /** @type {RequireAgent} */
@@ -58,16 +57,22 @@ export default class FasterTitanium {
         /** @type {LogSender} send Ti.API.* and console.* to server */
         this.logSender = new LogSender(this.socket).define()
 
+        this.fetchPreferences(host, fPort)
         this.registerListeners()
     }
 
 
+    /**
+     * get Preferences from file server
+     * @param {string} host
+     * @param {number} fPort
+     */
     fetchPreferences(host, fPort) {
         const url = `http://${host}:${fPort}/prefs`
         try {
-            const prefs = JSON.parse(Http.get(url, { timeout: 2000 }))
-            console.log(prefs)
-            // logger.debugMode = !!Number(debugModeStr) // notice: modifying global variable.
+            const response = Http.get(url, { timeout: 2000 })
+            const prefs = new Preferences(JSON.parse(response))
+            this.applyPreferences(prefs)
         }
         catch (e) {
             console.error(e)
@@ -86,6 +91,18 @@ export default class FasterTitanium {
             this.connectLater(10)
         })
         this.socket.onError(::this.socketError)
+    }
+
+
+    /**
+     * apply the given preferences
+     * @param {Preferences} prefs
+     */
+    applyPreferences(prefs) {
+        logger.debugMode = prefs.tiDebug
+        this.logSender.localLog = prefs.localLog
+        this.logSender.serverLog = prefs.serverLog
+        ____(`New preferences: ${JSON.stringify(prefs)}`)
     }
 
 
@@ -168,9 +185,8 @@ export default class FasterTitanium {
             case 'reflect':
                 this.reflect(payload)
                 break
-            case 'debug-mode':
-                logger.debugMode = payload.value
-                ____('DEBUG MODE STARTED')
+            case 'preferences':
+                this.applyPreferences(new Preferences(payload.prefs))
                 break
             default:
                 break

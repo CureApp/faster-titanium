@@ -7,16 +7,16 @@ export default class LogSender {
     /**
      * @param {Socket} socket
      * @param {Object} [options]
-     * @param {boolean} [options.local]
-     * @param {boolean} [options.server]
+     * @param {boolean} [options.localLog]
+     * @param {boolean} [options.serverLog]
      */
     constructor(socket, options = {}) {
         this.socket = socket
-        const {local = true, server = true} = options
+        const {localLog = true, serverLog = true} = options
         /** @type {boolean} show log in local */
-        this.local  = local
+        this.localLog  = localLog
         /** @type {boolean} send log to server */
-        this.server = server
+        this.serverLog = serverLog
         this.TiAPI = Ti.API
         this.console = console
     }
@@ -31,8 +31,8 @@ export default class LogSender {
         ['info', 'trace', 'warn', 'debug', 'critical', 'error'].forEach(severity => {
             const fn = this.TiAPI[severity]
             API[severity] = (...args) => {
-                if (this.server) this.send(args, severity)
-                if (this.local)  fn.apply(this.TiAPI, args)
+                if (this.serverLog) this.send(args, severity)
+                if (this.localLog)  fn.apply(this.TiAPI, args)
             }
         })
         Ti.API = API
