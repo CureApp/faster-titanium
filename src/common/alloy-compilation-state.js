@@ -1,5 +1,4 @@
 
-const ____ = (v, type = 'log') => console[type]('[FasterTitanium:AlloyCompilationState]', v)
 
 /**
  * Memorize alloy compilation state (start/finish)
@@ -22,7 +21,6 @@ export default class AlloyCompilationState {
 
         const timer = setTimeout(x => {
 
-            ____(`Compilation timed out after ${this.timeout}msec. token=${token}`)
             delete this.tokens[token]
 
         }, this.timeout)

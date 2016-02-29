@@ -41,6 +41,18 @@ ti build -p ios --faster
 
 That's all.
 
+### debug mode
+
+```bash
+ti build -p ios --faster --ft-debug
+```
+Debug mode shows more logs in Titanium. You can switch this option later via web UI.
+
+If you want to show server debug log, try
+```bash
+DEBUG=faster-titanium:* ti build -p ios --faster
+```
+
 ### Change port number of the web server
 
 ```bash
@@ -68,6 +80,11 @@ Clicking `Value` column of `loading style` enable you to select loading style.
 - **manual**: Do nothing.
 
 Default value is `auto-reload`.
+
+
+#### Toggle debug log option
+You can toggle debug log option by clicking `Value` column of `show debug log in Titanium`.
+
 
 ### CLI
 

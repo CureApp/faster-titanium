@@ -35,7 +35,7 @@ export default class MainProcess {
      * @param {string} platform platform name (ios|android|mobileweb|windows)
      */
     constructor(projDir, options = {}) {
-        const { fPort, nPort, host, platform } = options
+        const { fPort, nPort, host, platform, tiDebug } = options
 
         /** @type {string} project dir */
         this.projDir = projDir
@@ -44,7 +44,7 @@ export default class MainProcess {
         /** @type {string} platform os name of the Titanium App */
         this.platform = platform
         /** @type {Preferences} */
-        this.prefs = new Preferences()
+        this.prefs = new Preferences({tiDebug})
         /** @type {FileServer} */
         this.fServer = new FileServer(fPort, this.routes)
         /** @type {FileWatcher} */
@@ -173,7 +173,7 @@ export default class MainProcess {
     /**
      * send message to the client of notification server
      * @param {Object} payload
-     * @param {string} payload.event event name. oneof alloy-compilation|alloy-compilation-done|reload|reflect
+     * @param {string} payload.event event name. oneof alloy-compilation|alloy-compilation-done|reload|reflect|debug-mode
      */
     send(payload) {
         console.assert(payload && payload.event)
@@ -228,6 +228,7 @@ export default class MainProcess {
 
             ['/faster-titanium-web-js/main.js', url => responder.webJS()],
 
+
             [/\/loading-style\/[0-9]$/, url => {
                 const newValue = parseInt(url.slice(-1))
                 const expression = Preferences.expressions[newValue]
@@ -236,6 +237,17 @@ export default class MainProcess {
                 }
                 this.prefs.loadStyleNum = newValue
                 return responder.respondJSON({newValue, expression})
+            }],
+
+            ['/ti-debug-mode', url =>
+                responder.respond(this.prefs.tiDebugNum.toString())],
+
+
+            [/\/ti-debug-mode\/[01]$/, url => {
+                const tiDebug = !!parseInt(url.slice(-1))
+                this.prefs.tiDebug = tiDebug
+                this.send({event: 'debug-mode', value: tiDebug})
+                return responder.respondJSON({tiDebug})
             }],
 
             [/^\//, url => // any URL
@@ -256,6 +268,7 @@ export default class MainProcess {
             'platform'                       : this.platform,
             'connection with client'         : this.nServer.connected,
             'loading style'                  : this.prefs.style,
+            'show debug log in Titanium'     : this.prefs.tiDebug,
             //'Reloaded Times'               : this.stats.reloadedTimes
         }
     }

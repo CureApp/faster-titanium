@@ -40,7 +40,7 @@ export default class Root extends React.Component {
             {this.state.selectionModal ? <SelectionModal /> : ''}
             {this.state.connectionHintModal ? <ConnectionHintModal /> : ''}
             <pre>{this.state.notification}</pre>
-            <InfoTable info={this.state.tableInfo} fetchInfo={::this.fetchInfo} />
+            <InfoTable info={this.state.tableInfo} fetchInfo={::this.fetchInfo} toggleTiDebug={::this.toggleTiDebug} />
             <div className="nice-button"><a onClick={::this.reload}>Reload App</a></div>
         </div>
         )
@@ -59,6 +59,16 @@ export default class Root extends React.Component {
             })
             .then(x => {
                 GlobalState.set('notification', '')
+            })
+    }
+
+
+    toggleTiDebug() {
+        const newMode = ! this.state.tableInfo['show debug log in Titanium']
+        fetch('/ti-debug-mode/' + (newMode ? '1' : 0))
+            .then(res => res.text())
+            .then(text => {
+                GlobalState.set('tableInfo', 'show debug log in Titanium', newMode)
             })
     }
 }

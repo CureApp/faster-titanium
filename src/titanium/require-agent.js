@@ -1,9 +1,13 @@
 
 import Module from './module'
 import Http from './http'
-const ____ = (v, type = 'log') => console[type]('[FasterTitanium:RequireAgent]', v)
+
+import logger from './logger'
+const ____ = logger('FasterTitanium:RequireAgent')
 
 export default class RequireAgent {
+
+
 
     /**
      * @param {function} original (titanium) require function

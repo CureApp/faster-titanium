@@ -71,7 +71,13 @@ export default class InfoTable extends React.Component {
                 <td style={{cursor: 'pointer'}} onClick={::this.showConnectionHintModal}>
                     <Fa icon={v ?'check':'close'} style={{color: v?'green':'red', fontSize: 30}}/>
                     <Fa icon="question-circle" style={{color: '#39f', fontSize: 13, paddingLeft: 6, verticalAlign: '20%'}}/>
-                </td>
+                </td>,
+
+
+            'show debug log in Titanium': v =>
+                <td style={{cursor: 'pointer'}} onClick={::this.props.toggleTiDebug}>
+                    <Fa icon={v ?'toggle-on':'toggle-off'} style={{color: v?'green':'gray', fontSize: 30}}/>
+                </td>,
         }
 
         return modifiers[k] ? modifiers[k](v) : <td>{v}</td>

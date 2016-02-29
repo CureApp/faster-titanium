@@ -1,6 +1,4 @@
 
-const ____ = (v) => console.log('[Faster-Titanium:Http]', v)
-
 export default class Http {
 
     static get(url, options = {}) {

@@ -33,7 +33,14 @@ export default class Preferences {
 
     constructor(options = {}) {
         this.loadStyleNum = options.loadStyle || AUTO_RELOAD
+        this.tiDebug = !!options.tiDebug
     }
+
+
+    get tiDebugNum() {
+        return Number(this.tiDebug)
+    }
+
 
     get style() {
         return this.constructor.expressions[this.loadStyleNum]

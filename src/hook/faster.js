@@ -16,7 +16,7 @@ import chalk from 'chalk'
  * attach cli hooks to titanium CLI
  * this function must be named "init"
  *
- * ti build --faster [--ft-port 4157]
+ * ti build --faster [--ft-port 4157] [--ft-debug]
  * @public
  */
 export function init(logger, config, cli) {
@@ -79,6 +79,7 @@ export function attachFasterFlag(data) {
     const { flags, options } = data.result[1]
 
     flags.faster = { default: false, desc: 'enables faster rebuilding' }
+    flags['ft-debug']= { default: false, desc: 'faster titanium debug mode' }
     options['ft-port'] = { default: 4157, desc: 'port number for faster-titanium http server. If not available, use another open port.' }
 }
 
@@ -102,6 +103,7 @@ export function launchServers(data) {
 
     const { platform,
             'ft-port': port = 4157,
+            'ft-debug': tiDebug = false,
             'project-dir': projectDir } = this.cli.argv
 
     return getPorts(port).then(ports => {
@@ -110,7 +112,8 @@ export function launchServers(data) {
             platform,
             fPort: ports[0],
             nPort: ports[1],
-            host : getAddress()
+            host : getAddress(),
+            tiDebug
         }
         this.ftProcess = new MainProcess(projectDir, optsForServer)
         return this.ftProcess.launchServers()

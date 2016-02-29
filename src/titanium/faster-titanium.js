@@ -2,8 +2,10 @@
 import Socket from './socket'
 import RequireAgent from './require-agent'
 import AlloyCompilationState from '../common/alloy-compilation-state'
+import Http from './http'
 
-const ____ = (v, type = 'log') => console[type]('[FasterTitanium]', v)
+import logger from './logger'
+const ____ = logger('FasterTitanium')
 
 
 export default class FasterTitanium {
@@ -32,7 +34,9 @@ export default class FasterTitanium {
      */
     constructor(g, options = {}) {
 
-        const { fPort, nPort, host = 'localhost' } = options
+        const { fPort, nPort, host = 'localhost', debugMode } = options
+
+        this.fetchDebugModeFromServer(host, fPort)
 
         /** @type {Object} global object of Titanium environment */
         this.global = g
@@ -51,6 +55,18 @@ export default class FasterTitanium {
         this.socket.onConnection(x => ____(`Connection established to ${host}:${nPort}`))
 
         this.registerListeners()
+    }
+
+
+    fetchDebugModeFromServer(host, fPort) {
+        const url = `http://${host}:${fPort}/ti-debug-mode`
+        try {
+            const debugModeStr = Http.get(url, { timeout: 2000 }) // '1' or '0'
+            logger.debugMode = !!Number(debugModeStr) // notice: modifying global variable.
+        }
+        catch (e) {
+            console.error(e)
+        }
     }
 
     /**
@@ -129,6 +145,10 @@ export default class FasterTitanium {
                 break
             case 'reflect':
                 this.reflect(payload)
+                break
+            case 'debug-mode':
+                logger.debugMode = payload.value
+                ____('DEBUG MODE STARTED')
                 break
             default:
                 break
