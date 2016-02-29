@@ -75,7 +75,7 @@ export default class AlloyCompiler {
         return compilation
             .then(x => true, e => console.error('Alloy compilation failed.', e) || false)
             .then(result => {
-                return wait(200).then(x => { // set some time lag for file watcher
+                return wait(500).then(x => { // set some time lag for file watcher
                     this.acState.finished(token)
                     return result
                 })
