@@ -7,7 +7,6 @@ import optimizeAlloy from './optimize-alloy'
 const alloyPath = resolve(__dirname, '../../node_modules/.bin/alloy')
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:AlloyCompiler')
-const ___x = debug('faster-titanium:AlloyCompiler:error')
 const ___o = v => ____(v) || v
 const wait = (msec => new Promise(y => setTimeout(y, msec)))
 
@@ -53,7 +52,7 @@ export default class AlloyCompiler {
     /**
      * @param {string} path
      * @param {string} token identifier for this compilation
-     * @return {Promise<string>}
+     * @return {Promise<boolean>} compilation succeeded or not
      */
     compile(path, token) {
 
@@ -74,9 +73,13 @@ export default class AlloyCompiler {
         }
 
         return compilation
-            .catch(___x)
-            .then(x => wait(200)) // set some time lag for file watcher
-            .then(x => this.acState.finished(token))
+            .then(x => true, e => console.error('Alloy compilation failed.', e) || false)
+            .then(result => {
+                return wait(200).then(x => { // set some time lag for file watcher
+                    this.acState.finished(token)
+                    return result
+                })
+            })
     }
 
 
@@ -113,7 +116,7 @@ export default class AlloyCompiler {
         const relPath = relative(this.projDir, path)
         const command = `${alloyPath} compile --config platform=${this.platform},file=${relPath}`
         ___o(command)
-        return P(y => exec(command, {cwd: this.projDir}, y))
+        return P((y,n) => exec(command, {cwd: this.projDir}, (e,o) => e ? n(e) : y(o)))
     }
 
     /**

@@ -165,9 +165,13 @@ export default class MainProcess {
 
         /** @type {AlloyCompiler} */
         return this.alloyCompiler.compile(path, token)
-            .then(x => this.watcher.removeListener('change:Resources', poolChanged))
-            .then(x => this.send({event: 'alloy-compilation-done', token}))
-            .then(x => this.sendEvent({names: changedFiles}))
+        .then(result => {
+            this.send({event: 'alloy-compilation-done', token, success: result})
+            this.watcher.removeListener('change:Resources', poolChanged)
+            if (result) {
+                this.sendEvent({names: changedFiles})
+            }
+        })
     }
 
     /**
