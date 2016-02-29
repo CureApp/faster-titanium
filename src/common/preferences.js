@@ -32,8 +32,23 @@ export default class Preferences {
 
 
     constructor(options = {}) {
+        const {loadStyleNum = AUTO_RELOAD, tiDebug = false, serverLog = true, localLog = false} = options
+
+        /** @type {number} load style type */
         this.loadStyleNum = options.loadStyle || AUTO_RELOAD
-        this.tiDebug = !!options.tiDebug
+        /** @type {boolean} whether to show titanium log in server console */
+        this.tiDebug = tiDebug
+        /** @type {boolean} whether to show titanium log in server console */
+        this.serverLog = serverLog
+        /** @type {boolean} whether to show titanium log in titanium console */
+        this.localLog = localLog
+    }
+
+    apply(params = {}) {
+        Object.keys(this).forEach(key => {
+            const newValue = params[key]
+            if(typeof newValue === typeof this[key]) this[key] = newValue
+        })
     }
 
 

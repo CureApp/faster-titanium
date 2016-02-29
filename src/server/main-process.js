@@ -223,6 +223,10 @@ export default class MainProcess {
     }
 
 
+    /**
+     * @type {Array}
+     * @todo separate this to another file
+     */
     get routes() {
         const responder = new ContentResponder()
         return [
@@ -231,6 +235,14 @@ export default class MainProcess {
 
             ['/info', url =>
                 responder.respondJSON(this.info)],
+
+            ['/prefs', 'POST', (url, body) => {
+                this.prefs.apply(body)
+                return responder.respondJSON(this.prefs)
+            }],
+
+            ['/prefs', 'GET', (url) => responder.respondJSON(this.prefs) ],
+
 
             ['/kill', url => {
                 process.nextTick(::this.end)
@@ -278,13 +290,15 @@ export default class MainProcess {
      */
     get info() {
         return {
-            'project root'                   : this.projdir,
-            'notification server port'       : this.nPort,
-            'process uptime'                 : parseInt(process.uptime()) + ' [sec]',
-            'platform'                       : this.platform,
-            'connection with client'         : this.nServer.connected,
-            'loading style'                  : this.prefs.style,
-            'show debug log in Titanium'     : this.prefs.tiDebug,
+            'project root'                    : this.projdir,
+            'notification server port'        : this.nPort,
+            'process uptime'                  : parseInt(process.uptime()) + ' [sec]',
+            'platform'                        : this.platform,
+            'connection with client'          : this.nServer.connected,
+            'loading style'                   : this.prefs.style,
+            'show debug log in Titanium'      : this.prefs.tiDebug,
+            'show ti log in server console'   : this.prefs.serverLog,
+            'show ti log in titanium console' : this.prefs.localLog,
             //'Reloaded Times'               : this.stats.reloadedTimes
         }
     }

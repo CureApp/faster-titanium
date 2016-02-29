@@ -64,11 +64,15 @@ export default class Root extends React.Component {
 
 
     toggleTiDebug() {
-        const newMode = ! this.state.tableInfo['show debug log in Titanium']
-        fetch('/ti-debug-mode/' + (newMode ? '1' : 0))
-            .then(res => res.text())
-            .then(text => {
-                GlobalState.set('tableInfo', 'show debug log in Titanium', newMode)
-            })
+        const tiDebug = ! this.state.tableInfo['show debug log in Titanium']
+        fetch('/prefs',
+              { method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({tiDebug})
+        })
+        .then(res => res.text())
+        .then(text => {
+            GlobalState.set('tableInfo', 'show debug log in Titanium', tiDebug)
+        })
     }
 }
