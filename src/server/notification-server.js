@@ -22,6 +22,8 @@ export default class NotificationServer extends EventEmitter {
         this.client = null
         this.server = net.createServer(::this.addClient)
         this.server.on('error', err => ___x(err) || this.emit('error', err))
+        /** @type {string} received pre-parsed text */
+        this.received = ''
     }
 
 
@@ -70,6 +72,7 @@ export default class NotificationServer extends EventEmitter {
         }
 
         socket.setEncoding('utf8')
+        socket.on('data', ::this.onData)
         this.client = socket
     }
 
@@ -91,5 +94,34 @@ export default class NotificationServer extends EventEmitter {
         // as payloads are sometimes joined with previous one, the client should split them with "\n" separator
         // (see src/titanium/socket.js)
         this.client.write(JSON.stringify(payload) + '\n')
+    }
+
+    /**
+     * Called when data comes from client
+     * Split into multiple payloads
+     * @param {string} chunk
+     */
+    onData(chunk) {
+        this.received += chunk
+        const payloads = this.received.split('\n')
+        this.received = payloads.pop()
+
+        payloads.map(JSON.parse).forEach(::this.readPayload)
+    }
+
+    /**
+     * read payload sent by client
+     * @param {Object} payload
+     */
+    readPayload(payload) {
+
+        switch (payload.type) {
+            case 'log':
+                this.emit('log', payload)
+                break
+            default:
+                console.log(payload)
+                break
+        }
     }
 }

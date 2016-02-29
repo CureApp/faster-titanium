@@ -3,6 +3,7 @@ import Socket from './socket'
 import RequireAgent from './require-agent'
 import AlloyCompilationState from '../common/alloy-compilation-state'
 import Http from './http'
+import LogSender from './log-sender'
 
 import logger from './logger'
 const ____ = logger('FasterTitanium')
@@ -53,6 +54,9 @@ export default class FasterTitanium {
         /** @type {Socket} file server URL */
         this.socket = new Socket({host: host, port: parseInt(nPort, 10)})
         this.socket.onConnection(x => ____(`Connection established to ${host}:${nPort}`))
+
+        /** @type {LogSender} send Ti.API.* and console.* to server */
+        this.logSender = new LogSender(this.socket).define()
 
         this.registerListeners()
     }

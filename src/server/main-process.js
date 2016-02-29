@@ -87,6 +87,7 @@ export default class MainProcess {
         this.nServer.on('error', ___x)
         this.watcher.on('error', ___x)
 
+        this.nServer.on('log', ::this.tilog)
         this.watcher.on('change:Resources', ::this.onResourceFileChanged)
         this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
     }
@@ -128,6 +129,17 @@ export default class MainProcess {
             this.nServer.close(),
             this.watcher.close()
         ])
+    }
+
+    /**
+     * show titanium log in console
+     * @param {Object} payload
+     * @param {Array} payload.args
+     * @param {string} payload.severity trace|debug|info|warn|error|critical
+     */
+    tilog(payload) {
+        const { args, severity } = payload
+        console.log(`[${severity}]`, ...payload.args)
     }
 
 

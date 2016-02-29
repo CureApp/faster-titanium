@@ -68,6 +68,13 @@ export default class Socket {
         })
     }
 
+    send(payload) {
+        const buf = Ti.createBuffer({value: JSON.stringify(payload) + '\n'})
+        const bytes = this.proxy.write(buf)
+    }
+
+
+
     /**
      * set listener of data event
      * @param {function} fn
