@@ -52,6 +52,7 @@ function run() {
     log(`\tproject dir: ${ftProcess.projDir}`, 'green')
     log(`\tplatform: ${ftProcess.platform}`, 'green')
     log(`\tnotification server port: ${ftProcess.nPort}`, 'green')
+    log(`\taccess token: ${ftProcess.token}`, 'green')
 }
 
 export function showLogo() {
