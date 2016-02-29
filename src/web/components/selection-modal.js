@@ -1,6 +1,7 @@
 
 import Preferences from '../../common/preferences'
 import GlobalState from '../global-state'
+import postPreferences from '../post-preferences'
 import modalStyle from '../styles/modal'
 const wait = (msec => new Promise(y => setTimeout(y, msec)))
 
@@ -79,13 +80,12 @@ export default class SelectionModal extends React.Component {
      * send custom loading style name to the server
      */
     changeLoadingStyle() {
-        const val = this.state.selected
+        const loadStyleNum = parseInt(this.state.selected)
 
-        fetch(`/loading-style/${val}`)
-        .then (res => res.json())
+        postPreferences({loadStyleNum})
         .then (json => {
             this.close()
-            GlobalState.set('tableInfo', 'loading style', json.expression)
+            GlobalState.set('tableInfo', 'loading style', Preferences.expressions[loadStyleNum])
             GlobalState.set('notification', 'loading style changed.')
         })
         .then (x => wait(2000))

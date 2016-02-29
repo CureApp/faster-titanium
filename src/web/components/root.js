@@ -1,4 +1,5 @@
 import GlobalState from '../global-state'
+import postPreferences from '../post-preferences'
 import InfoTable from './info-table'
 import SelectionModal from './selection-modal'
 import ConnectionHintModal from './connection-hint-modal'
@@ -65,13 +66,8 @@ export default class Root extends React.Component {
 
     toggleTiDebug() {
         const tiDebug = ! this.state.tableInfo['show debug log in Titanium']
-        fetch('/prefs',
-              { method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({tiDebug})
-        })
-        .then(res => res.text())
-        .then(text => {
+        postPreferences({tiDebug})
+        .then(json => {
             GlobalState.set('tableInfo', 'show debug log in Titanium', tiDebug)
         })
     }

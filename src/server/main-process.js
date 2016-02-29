@@ -238,6 +238,7 @@ export default class MainProcess {
 
             ['/prefs', 'POST', (url, body) => {
                 this.prefs.apply(body)
+                this.send({event: 'prefs', value: this.prefs})
                 return responder.respondJSON(this.prefs)
             }],
 
@@ -255,28 +256,6 @@ export default class MainProcess {
             }],
 
             ['/faster-titanium-web-js/main.js', url => responder.webJS()],
-
-
-            [/\/loading-style\/[0-9]$/, url => {
-                const newValue = parseInt(url.slice(-1))
-                const expression = Preferences.expressions[newValue]
-                if (!expression) {
-                    return responder.notFound(url)
-                }
-                this.prefs.loadStyleNum = newValue
-                return responder.respondJSON({newValue, expression})
-            }],
-
-            ['/ti-debug-mode', url =>
-                responder.respond(this.prefs.tiDebugNum.toString())],
-
-
-            [/\/ti-debug-mode\/[01]$/, url => {
-                const tiDebug = !!parseInt(url.slice(-1))
-                this.prefs.tiDebug = tiDebug
-                this.send({event: 'debug-mode', value: tiDebug})
-                return responder.respondJSON({tiDebug})
-            }],
 
             [/^\//, url => // any URL
                 responder.resource(url, this.projDir, this.platform)],

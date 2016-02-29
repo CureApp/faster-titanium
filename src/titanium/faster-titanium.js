@@ -37,7 +37,7 @@ export default class FasterTitanium {
 
         const { fPort, nPort, host = 'localhost', debugMode } = options
 
-        this.fetchDebugModeFromServer(host, fPort)
+        this.fetchPreferences(host, fPort)
 
         /** @type {Object} global object of Titanium environment */
         this.global = g
@@ -62,11 +62,12 @@ export default class FasterTitanium {
     }
 
 
-    fetchDebugModeFromServer(host, fPort) {
-        const url = `http://${host}:${fPort}/ti-debug-mode`
+    fetchPreferences(host, fPort) {
+        const url = `http://${host}:${fPort}/prefs`
         try {
-            const debugModeStr = Http.get(url, { timeout: 2000 }) // '1' or '0'
-            logger.debugMode = !!Number(debugModeStr) // notice: modifying global variable.
+            const prefs = JSON.parse(Http.get(url, { timeout: 2000 }))
+            console.log(prefs)
+            // logger.debugMode = !!Number(debugModeStr) // notice: modifying global variable.
         }
         catch (e) {
             console.error(e)
