@@ -39,7 +39,7 @@ export default class LogSender {
         try {
             const API = {};
 
-            ['info', 'trace', 'warn', 'debug', 'critical', 'error'].forEach(severity => {
+            ['log', 'info', 'trace', 'warn', 'debug', 'critical', 'error'].forEach(severity => {
                 const fn = this.TiAPI[severity]
                 API[severity] = (...args) => {
                     if (this.enabled && this.serverLog) this.send(args, severity)
@@ -48,7 +48,6 @@ export default class LogSender {
             })
             Ti.API = API
             console = API
-            console.log = console.info
         }
         catch (e) {}
 

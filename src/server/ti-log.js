@@ -4,6 +4,10 @@
  */
 export default class TiLog {
 
+    static log(args) {
+        console.log('[INFO]', ...args)
+    }
+
     static info(args) {
         console.log('[INFO]', ...args)
     }
