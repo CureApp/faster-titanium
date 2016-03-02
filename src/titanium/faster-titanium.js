@@ -20,6 +20,7 @@ export default class FasterTitanium {
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     static run(g, options) {
+        Logger.init()
         const ft = new FasterTitanium(g, options)
         FasterTitanium.instance = ft
         ft.startApp()

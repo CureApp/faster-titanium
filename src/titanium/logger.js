@@ -6,7 +6,7 @@ const firstLoaded = new Date().getTime()
  */
 export default class Logger {
 
-    // pseudo constructor of this singleton. Called at the last line of this file.
+    // pseudo constructor of this singleton.
     static init() {
         this.socket = null
         this.queue = []
@@ -108,5 +108,3 @@ export default class Logger {
         }
     }
 }
-
-Logger.init()
