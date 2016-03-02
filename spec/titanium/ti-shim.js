@@ -2,6 +2,14 @@
 const noop = () => {}
 
 global.Ti = {
+    API: {
+        trace: console.log,
+        debug: console.log,
+        info: console.log,
+        warn: console.log,
+        error: console.log,
+        critical: console.log,
+    },
 
     Platform: {
         osname: 'iphone'

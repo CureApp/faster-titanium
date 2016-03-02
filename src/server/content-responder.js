@@ -107,7 +107,7 @@ export default class ContentResponder {
      * @return {Promise<ResponseInfo>}
      */
     webJS() {
-        if (this.hasCache('webJS')) return this.responseCache('webJS')
+        // if (this.hasCache('webJS')) return this.responseCache('webJS')
 
         const mainJSPath = resolve(__dirname, '../../dist/web/main.bundle.js')
         return this.respondFile(mainJSPath, 'text/javascript').then(info => this.cache('webJS', info))

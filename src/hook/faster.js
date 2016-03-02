@@ -16,7 +16,7 @@ import chalk from 'chalk'
  * attach cli hooks to titanium CLI
  * this function must be named "init"
  *
- * ti build --faster [--ft-port 4157]
+ * ti build --faster [--ft-port 4157] [--ft-debug]
  * @public
  */
 export function init(logger, config, cli) {
@@ -79,6 +79,7 @@ export function attachFasterFlag(data) {
     const { flags, options } = data.result[1]
 
     flags.faster = { default: false, desc: 'enables faster rebuilding' }
+    flags['ft-debug']= { default: false, desc: 'faster titanium debug mode' }
     options['ft-port'] = { default: 4157, desc: 'port number for faster-titanium http server. If not available, use another open port.' }
 }
 
@@ -102,6 +103,7 @@ export function launchServers(data) {
 
     const { platform,
             'ft-port': port = 4157,
+            'ft-debug': tiDebug = false,
             'project-dir': projectDir } = this.cli.argv
 
     return getPorts(port).then(ports => {
@@ -110,7 +112,8 @@ export function launchServers(data) {
             platform,
             fPort: ports[0],
             nPort: ports[1],
-            host : getAddress()
+            host : getAddress(),
+            tiDebug
         }
         this.ftProcess = new MainProcess(projectDir, optsForServer)
         return this.ftProcess.launchServers()
@@ -150,9 +153,9 @@ export function manipulateAppJS(data) {
 
     data.args[0] = newSrc
 
-    const { fPort, nPort, host } = this.ftProcess
+    const { fPort, nPort, host, token } = this.ftProcess
 
-    const code = generateNewAppJS(fPort, nPort, host)
+    const code = generateNewAppJS(fPort, nPort, host, token)
 
     write(newSrc, code)
 }
@@ -163,9 +166,9 @@ export function manipulateAppJS(data) {
  * New app.js consists of bundled lib of faster-titanium and one line initializer
  * @private
  */
-export function generateNewAppJS(fPort, nPort, host) {
+export function generateNewAppJS(fPort, nPort, host, token) {
 
-    const opts = JSON.stringify({ fPort, nPort, host })
+    const opts = JSON.stringify({ fPort, nPort, host, token })
 
     const initialCode = `Ti.FasterTitanium.run(this, ${opts})`
     const tiEntry = resolve(__dirname, '../../dist/titanium/faster-titanium.bundle.js')
@@ -237,8 +240,12 @@ export function multiplyRegistered() {
  */
 export function isAlloyCompatible() {
 
-    const alloyVer = which('alloy') && exec('alloy -v', {silent: true}).stdout.trim()
+    const alloyPath = which('alloy')
+
+    const alloyVer = alloyPath && exec(`${alloyPath} -v`, {silent: true}).stdout.trim()
     if (!alloyVer) return; // no alloy: OK
+
+    const isGlobalAlloy = !!alloyPath.match('^/usr')
 
     const versionRange = '>=1.7'
 
@@ -246,10 +253,12 @@ export function isAlloyCompatible() {
 
     if (!isCompatible) {
         this.logger.error(`
-            Invalid global alloy version "${alloyVer}".
+            Invalid alloy version "${alloyVer}".
+            (alloy path = ${alloyPath})
+
             To get "--faster" option enabled, global alloy version must satisfy with "${versionRange}".
 
-                npm install -g alloy
+                npm install ${isGlobalAlloy ? '-g ' : ''}alloy
         `)
         process.exit(1)
     }

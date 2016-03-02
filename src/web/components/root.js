@@ -39,7 +39,7 @@ export default class Root extends React.Component {
         <div>
             {this.state.selectionModal ? <SelectionModal /> : ''}
             {this.state.connectionHintModal ? <ConnectionHintModal /> : ''}
-            <pre>{this.state.notification}</pre>
+            <pre style={{height: 25}}>{this.state.notification}</pre>
             <InfoTable info={this.state.tableInfo} fetchInfo={::this.fetchInfo} />
             <div className="nice-button"><a onClick={::this.reload}>Reload App</a></div>
         </div>
@@ -61,4 +61,5 @@ export default class Root extends React.Component {
                 GlobalState.set('notification', '')
             })
     }
+
 }

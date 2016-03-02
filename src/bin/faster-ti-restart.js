@@ -10,6 +10,7 @@ program
     .option('-f, --fport <port number>', 'port number of the http server', parseInt)
     .option('-n, --nport <port number>', 'port number of the notification server', parseInt)
     .option('-p, --platform <platform name>', 'ios|android')
+    .option('-t, --token <token>', 'access token')
     .parse(process.argv)
 
 
@@ -18,7 +19,7 @@ function run() {
     const projDir = program.args[0]
     if (!projDir) return program.help()
 
-    const hasOptions = ['fport', 'nport', 'platform'].every(opt => {
+    const hasOptions = ['fport', 'nport', 'platform', 'token'].every(opt => {
         const hasValue = program[opt] != null
         return hasValue || log(`"${opt}" option wasn't passed.`, 'yellow')
     })
@@ -28,7 +29,8 @@ function run() {
         fPort: program.fport,
         nPort: program.nport,
         host:  'localhost',
-        platform: program.platform
+        platform: program.platform,
+        token: program.token
     }
 
     const absProjDir = absolutePath(projDir)
@@ -50,6 +52,7 @@ function run() {
     log(`\tproject dir: ${ftProcess.projDir}`, 'green')
     log(`\tplatform: ${ftProcess.platform}`, 'green')
     log(`\tnotification server port: ${ftProcess.nPort}`, 'green')
+    log(`\taccess token: ${ftProcess.token}`, 'green')
 }
 
 export function showLogo() {

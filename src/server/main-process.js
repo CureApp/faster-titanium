@@ -9,6 +9,7 @@ import NotificationServer from './notification-server'
 import ContentResponder from './content-responder'
 import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
+import TiLog from './ti-log'
 import { isAppJS, modNameByPath } from '../common/util'
 
 const ____ = debug('faster-titanium:MainProcess')
@@ -29,14 +30,17 @@ export default class MainProcess {
     /**
      * @param {string} projDir
      * @param {Object} [options={}]
-     * @param {number} fPort port number of the file server
-     * @param {number} nPort port number of the notification server
-     * @param {string} host host name or IP Address
-     * @param {string} platform platform name (ios|android|mobileweb|windows)
+     * @param {number} [options.fPort] port number of the file server
+     * @param {number} [options.nPort] port number of the notification server
+     * @param {string} [options.host] host name or IP Address
+     * @param {string} [options.platform] platform name (ios|android|mobileweb|windows)
+     * @param {string} [options.token] identifier for this process
      */
     constructor(projDir, options = {}) {
-        const { fPort, nPort, host, platform } = options
+        const { fPort, nPort, host, platform, tiDebug, token } = options
 
+        /** @type {string} identifier for this process */
+        this.token = token || randomstring.generate(10)
         /** @type {string} project dir */
         this.projDir = projDir
         /** @type {string} hostname or IP Address */
@@ -44,21 +48,26 @@ export default class MainProcess {
         /** @type {string} platform os name of the Titanium App */
         this.platform = platform
         /** @type {Preferences} */
-        this.prefs = new Preferences()
+        this.prefs = new Preferences({tiDebug})
         /** @type {FileServer} */
-        this.fServer = new FileServer(fPort, this.routes)
+        this.fServer = new FileServer(fPort, this.token, this.routes)
         /** @type {FileWatcher} */
         this.watcher = new FileWatcher(this.projDir)
         /** @type {NotificationServer} */
-        this.nServer = new NotificationServer(nPort)
+        this.nServer = new NotificationServer(nPort, this.token)
         /** @type {AlloyCompiler} */
         this.alloyCompiler = new AlloyCompiler(this.projDir, this.platform)
         this.registerListeners()
 
         process.on('exit', x => {
             console.log(chalk.yellow(`You can restart faster-titanium server with the following command.\n`))
-            console.log(chalk.yellow(`faster-ti restart -f ${fPort} -n ${nPort} -p ${platform} ${projDir}`))
+            console.log(chalk.yellow(this.restartCommand))
         })
+    }
+
+    /** @type {string} */
+    get restartCommand() {
+        return `faster-ti restart -f ${this.fPort} -n ${this.nPort} -p ${this.platform} -t ${this.token} ${this.projDir}`
     }
 
     /** @type {string} */
@@ -87,6 +96,7 @@ export default class MainProcess {
         this.nServer.on('error', ___x)
         this.watcher.on('error', ___x)
 
+        this.nServer.on('log', ::this.tilog)
         this.watcher.on('change:Resources', ::this.onResourceFileChanged)
         this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
     }
@@ -130,6 +140,20 @@ export default class MainProcess {
         ])
     }
 
+    /**
+     * show titanium log in console
+     * @param {Object} payload
+     * @param {Array} payload.args
+     * @param {string} payload.severity trace|debug|info|warn|error|critical
+     * @param {Object} [payload.options]
+     * @param {string} [payload.options.time] ISOStringfied time the log generated
+     * @param {string} [payload.options.debugname] debug name
+     */
+    tilog(payload) {
+        const { args, severity, options } = payload
+        TiLog[severity](args, options)
+    }
+
 
     /**
      * called when files in Resources directory changed
@@ -165,15 +189,19 @@ export default class MainProcess {
 
         /** @type {AlloyCompiler} */
         return this.alloyCompiler.compile(path, token)
-            .then(x => this.watcher.removeListener('change:Resources', poolChanged))
-            .then(x => this.send({event: 'alloy-compilation-done', token}))
-            .then(x => this.sendEvent({names: changedFiles}))
+        .then(result => {
+            this.send({event: 'alloy-compilation-done', token, success: result})
+            this.watcher.removeListener('change:Resources', poolChanged)
+            if (result) {
+                this.sendEvent({names: changedFiles})
+            }
+        })
     }
 
     /**
      * send message to the client of notification server
      * @param {Object} payload
-     * @param {string} payload.event event name. oneof alloy-compilation|alloy-compilation-done|reload|reflect
+     * @param {string} payload.event event name. oneof alloy-compilation|alloy-compilation-done|reload|reflect|debug-mode
      */
     send(payload) {
         console.assert(payload && payload.event)
@@ -207,6 +235,10 @@ export default class MainProcess {
     }
 
 
+    /**
+     * @type {Array}
+     * @todo separate this to another file
+     */
     get routes() {
         const responder = new ContentResponder()
         return [
@@ -215,6 +247,15 @@ export default class MainProcess {
 
             ['/info', url =>
                 responder.respondJSON(this.info)],
+
+            ['/prefs', 'POST', (url, body) => {
+                this.prefs.apply(body)
+                this.send({event: 'preferences', prefs: this.prefs})
+                return responder.respondJSON(this.prefs)
+            }],
+
+            ['/prefs', 'GET', (url) => responder.respondJSON(this.prefs) ],
+
 
             ['/kill', url => {
                 process.nextTick(::this.end)
@@ -228,16 +269,6 @@ export default class MainProcess {
 
             ['/faster-titanium-web-js/main.js', url => responder.webJS()],
 
-            [/\/loading-style\/[0-9]$/, url => {
-                const newValue = parseInt(url.slice(-1))
-                const expression = Preferences.expressions[newValue]
-                if (!expression) {
-                    return responder.notFound(url)
-                }
-                this.prefs.loadStyleNum = newValue
-                return responder.respondJSON({newValue, expression})
-            }],
-
             [/^\//, url => // any URL
                 responder.resource(url, this.projDir, this.platform)],
         ]
@@ -250,12 +281,16 @@ export default class MainProcess {
      */
     get info() {
         return {
-            'project root'                   : this.projdir,
-            'notification server port'       : this.nPort,
-            'process uptime'                 : parseInt(process.uptime()) + ' [sec]',
-            'platform'                       : this.platform,
-            'connection with client'         : this.nServer.connected,
-            'loading style'                  : this.prefs.style,
+            'access token'                    : this.token,
+            'project root'                    : this.projDir,
+            'notification server port'        : this.nPort,
+            'process uptime'                  : parseInt(process.uptime()) + ' [sec]',
+            'platform'                        : this.platform,
+            'connection with client'          : this.nServer.connected,
+            'loading style'                   : this.prefs.style,
+            'show debug log in Titanium'      : this.prefs.tiDebug,
+            'show ti log in server console'   : this.prefs.serverLog,
+            'show ti log in titanium console' : this.prefs.localLog,
             //'Reloaded Times'               : this.stats.reloadedTimes
         }
     }

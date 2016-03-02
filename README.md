@@ -41,6 +41,18 @@ ti build -p ios --faster
 
 That's all.
 
+### debug mode
+
+```bash
+ti build -p ios --faster --ft-debug
+```
+Debug mode shows more logs in Titanium. You can switch this option later via web UI.
+
+If you want to show server debug log, try
+```bash
+DEBUG=faster-titanium:* ti build -p ios --faster
+```
+
 ### Change port number of the web server
 
 ```bash
@@ -51,7 +63,7 @@ ti build -p ios --faster --ft-port 3000
 ### Web UI
 ![web-ui](https://cureapp.github.io/faster-titanium/web-ui.png)
 
-Access to the URL: http://localhost:4157
+Access to the URL: [http://localhost:4157](http://localhost:4157)
 
 #### Connection state
 It shows the state of current connection with Titanium app.
@@ -68,6 +80,13 @@ Clicking `Value` column of `loading style` enable you to select loading style.
 - **manual**: Do nothing.
 
 Default value is `auto-reload`.
+
+
+#### logging options
+- debug log: show/hide FasterTitanium debug log
+- server log: show/hide Titanium log to server console
+- titanium log: show/hide Titanium log to Titanium console
+
 
 ### CLI
 
@@ -90,7 +109,7 @@ If ti process is killed, FasterTitanium server is also killed.
 You can restart FasterTitanium server by the following command.
 
 ```bash
-faster-ti restart -f <port number1> -n <port number2> -p <platform name> [project dir]
+faster-ti restart -f <port number1> -n <port number2> -p <platform name> -t <acceess token> [project dir]
 ```
 Too many options? No problem.
 
