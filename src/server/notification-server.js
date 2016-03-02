@@ -70,7 +70,8 @@ export default class NotificationServer extends EventEmitter {
                 this.addClient(socket)
             }
             else {
-                ____(`Token doesn't match. client: ${clientToken}, server: ${this.token}`)
+                ____(`Token doesn't match. client: ${clientToken}, server: ${this.token}.
+                     For most case, this is caused by older app retrying connection to the server. Ignore it.`)
                 socket.end()
             }
         })

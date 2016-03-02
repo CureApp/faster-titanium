@@ -23,7 +23,7 @@ export default class Http {
                     result = proxy.responseText
                     break
                 }
-                throw new Error(`[HTTP GET] status:${proxy.status}\n ${proxy.responseText}`)
+                throw new Error(`[HTTP GET] status:${proxy.status}\n ${proxy.responseText}. url = ${url}`)
             }
 
             if (new Date().getTime() - timestamp > timeout) {

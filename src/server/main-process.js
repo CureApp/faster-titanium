@@ -145,10 +145,13 @@ export default class MainProcess {
      * @param {Object} payload
      * @param {Array} payload.args
      * @param {string} payload.severity trace|debug|info|warn|error|critical
+     * @param {Object} [payload.options]
+     * @param {string} [payload.options.time] ISOStringfied time the log generated
+     * @param {string} [payload.options.debugname] debug name
      */
     tilog(payload) {
-        const { args, severity } = payload
-        TiLog[severity](args)
+        const { args, severity, options } = payload
+        TiLog[severity](args, options)
     }
 
 

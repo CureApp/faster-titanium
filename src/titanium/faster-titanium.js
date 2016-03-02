@@ -4,10 +4,9 @@ import Socket from './socket'
 import RequireAgent from './require-agent'
 import AlloyCompilationState from '../common/alloy-compilation-state'
 import Http from './http'
-import LogSender from './log-sender'
 
-import logger from './logger'
-const ____ = logger('FasterTitanium')
+import Logger from './logger'
+const ____ = Logger.debug('FasterTitanium')
 
 
 export default class FasterTitanium {
@@ -59,9 +58,6 @@ export default class FasterTitanium {
         this.socket = new Socket({host: host, port: parseInt(nPort, 10)})
         this.socket.onConnection(x => this.socket.sendText(this.token))
 
-        /** @type {LogSender} send Ti.API.* and console.* to server */
-        this.logSender = new LogSender(this.socket).define()
-
         this.fetchPreferences(host, fPort)
         this.registerListeners()
     }
@@ -96,7 +92,7 @@ export default class FasterTitanium {
             if (this.connected) {
                 this.showDialog('TCP server is terminated. \n(This dialog will be closed in 3sec.)', 3000)
             }
-            this.logSender.disable()
+            Logger.serverLogDisabled()
             this.connected = false
             this.connectLater(10)
         })
@@ -109,10 +105,10 @@ export default class FasterTitanium {
      * @param {Preferences} prefs
      */
     applyPreferences(prefs) {
-        logger.debugMode = prefs.tiDebug
-        this.logSender.localLog = prefs.localLog
-        this.logSender.serverLog = prefs.serverLog
-        ____(`New preferences: ${JSON.stringify(prefs)}`)
+        Logger.debugMode = prefs.tiDebug
+        Logger.localLog = prefs.localLog
+        Logger.serverLog = prefs.serverLog
+        ____(`New preferences: ${JSON.stringify(prefs)}`, 'trace')
     }
 
 
@@ -185,7 +181,7 @@ export default class FasterTitanium {
         switch (payload.event) {
             case 'connected':
                 this.connected = true
-                this.logSender.enable()
+                Logger.serverLogEnabled(this.socket)
                 ____(`Connection established to ${this.socket.url}`)
                 break
             case 'alloy-compilation':

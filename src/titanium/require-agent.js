@@ -2,8 +2,8 @@
 import Module from './module'
 import Http from './http'
 
-import logger from './logger'
-const ____ = logger('FasterTitanium:RequireAgent')
+import Logger from './logger'
+const ____ = Logger.debug('FasterTitanium:RequireAgent')
 
 export default class RequireAgent {
 
@@ -41,7 +41,7 @@ export default class RequireAgent {
      */
     require(moduleName) {
 
-        ____(`requiring ${moduleName}`)
+        ____(`requiring ${moduleName}`, 'trace')
         if (this.modules[moduleName]) {
             return this.modules[moduleName].exports
         }
@@ -108,7 +108,7 @@ export default class RequireAgent {
     getServerSource(moduleName) {
 
         const url = `http://${this.host}:${this.port}/${moduleName}.js`
-        ____(`\tremote access: ${url}`)
+        ____(`\tremote access: ${url}`, 'trace')
 
         return Http.get(url, {
             timeout: this.timeout
@@ -121,7 +121,7 @@ export default class RequireAgent {
      */
     getLocalSource(moduleName) {
 
-        ____(`\tfile access: ${moduleName}`)
+        ____(`\tfile access: ${moduleName}`, 'trace')
 
         if (moduleName === 'app') moduleName = 'original-app'
 

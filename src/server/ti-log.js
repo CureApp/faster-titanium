@@ -4,31 +4,47 @@
  */
 export default class TiLog {
 
-    static log(args) {
-        console.log('[INFO]', ...args)
+    static log(args, options) {
+        this.__base('INFO', '', '', args, options)
     }
 
-    static info(args) {
-        console.log('[INFO]', ...args)
+    static info(args, options) {
+        this.__base('INFO', '', '', args, options)
     }
 
-    static warn(args) {
-        console.log('\u001b[33m', '[WARN]', ...args, '\u001b[0m')
+    static warn(args, options) {
+        this.__base('WARN', '\u001b[33m', '\u001b[0m', args, options)
     }
 
-    static debug(args) {
-        console.log('\x1b[38;5;240m', '[DEBUG]', ...args, '\x1b[0m')
+    static debug(args, options) {
+        this.__base('DEBUG', '\x1b[38;5;240m', '\x1b[0m', args, options)
     }
 
-    static trace(args) {
-        console.log('\x1b[38;5;233m', '[TRACE]', ...args, '\x1b[0m')
+    static trace(args, options) {
+        this.__base('TRACE', '\x1b[38;5;233m', '\x1b[0m', args, options)
     }
 
-    static error(args) {
-        console.log('\u001b[31m', '[ERROR]', ...args, '\u001b[0m')
+    static error(args, options) {
+        this.__base('ERROR', '\u001b[31m', '\u001b[0m', args, options)
     }
 
-    static critical(args) {
-        console.log('\u001b[31m', '[CRITICAL]', ...args, '\u001b[0m')
+    static critical(args, options) {
+        this.__base('CRITICAL', '\u001b[31m', '\u001b[0m', args, options)
+    }
+
+
+    static __base(name, startANSI, endANSI, args, options = {}) {
+        const {time, debugname} = options
+        const title = debugname ? debugname + ':' + name : name
+
+        const consoleArgs = [startANSI + `[Ti:${title}]`, ...args]
+
+        if (time) {
+            const timediff = new Date().getTime(time) - new Date().getTime()
+            if (timediff < 0) consoleArgs.push(`\u001b[36m${timediff}ms\u001b[0m`) // cyan
+        }
+        if (endANSI) consoleArgs.push(endANSI)
+
+        console.log.apply(console, consoleArgs)
     }
 }
