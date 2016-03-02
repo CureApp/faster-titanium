@@ -114,19 +114,12 @@ export default class AlloyCompiler {
      */
     compileFiles(path) {
         const relPath = relative(this.projDir, path)
-        const command = `${alloyPath} compile --config platform=${this.platform},file=${relPath}`
-        ___o(command)
-        return P((y,n) => exec(command, {cwd: this.projDir}, (e,o) => e ? n(e) : y(o)))
-    }
-
-    /**
-     * compile all files
-     * @deprecated
-     * @private
-     */
-    compileAll() {
-        const command = `${alloyPath} compile --config platform=${this.platform}`
-        ___o(command)
-        return P(y => exec(command, {cwd: this.projDir}, y))
+        try {
+            require('alloy/Alloy/commands/compile/index')([], {config: `platform=${this.platform},file=${relPath}`})
+            return Promise.resolve()
+        }
+        catch (e) {
+            return Promise.reject(e)
+        }
     }
 }
