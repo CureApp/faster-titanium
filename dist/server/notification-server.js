@@ -1,0 +1,219 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _debug = require('debug');
+
+var _debug2 = _interopRequireDefault(_debug);
+
+var _net = require('net');
+
+var _net2 = _interopRequireDefault(_net);
+
+var _fileWatcher = require('./file-watcher');
+
+var _fileWatcher2 = _interopRequireDefault(_fileWatcher);
+
+var _events = require('events');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var P = function P(f) {
+    return new Promise(f);
+};
+var ____ = (0, _debug2.default)('faster-titanium:NotificationServer');
+var ___x = (0, _debug2.default)('faster-titanium:NotificationServer:error');
+
+/**
+ * Server connecting continuously with Titanium App.
+ * Restrict connection: only one device can connect to the server.
+ */
+
+var NotificationServer = function (_EventEmitter) {
+    _inherits(NotificationServer, _EventEmitter);
+
+    /**
+     * @param {string} [port]
+     */
+
+    function NotificationServer(port, token) {
+        _classCallCheck(this, NotificationServer);
+
+        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(NotificationServer).call(this));
+
+        _this.port = port;
+        _this.token = token;
+        _this.client = null;
+        _this.server = _net2.default.createServer(_this.verifyClient.bind(_this));
+        _this.server.on('error', function (err) {
+            return ___x(err) || _this.emit('error', err);
+        });
+        /** @type {string} received pre-parsed text */
+        _this.received = '';
+        return _this;
+    }
+
+    /** @type {boolean} */
+
+
+    _createClass(NotificationServer, [{
+        key: 'listen',
+
+
+        /**
+         * listen
+         * @public
+         * @return {Promise}
+         */
+        value: function listen() {
+            var _this2 = this;
+
+            return P(function (y) {
+                return _this2.server.listen(_this2.port, y);
+            }).then(function (x) {
+                ____('start listening ' + _this2.port);
+            });
+        }
+
+        /**
+         * close server
+         * @public
+         * @return {Promise}
+         */
+
+    }, {
+        key: 'close',
+        value: function close() {
+            var _this3 = this;
+
+            ____('terminating...');
+            this.client && this.client.destroy();
+
+            return P(function (y) {
+                return _this3.server.close(y);
+            }).then(function (x) {
+                ____('terminated');
+            });
+        }
+
+        /**
+         * check the client has the right access token
+         * @param {net.Socket} socket
+         */
+
+    }, {
+        key: 'verifyClient',
+        value: function verifyClient(socket) {
+            var _this4 = this;
+
+            socket.setEncoding('utf8');
+            socket.once('data', function (clientToken) {
+                if (clientToken === _this4.token) {
+                    _this4.addClient(socket);
+                } else {
+                    ____('Token doesn\'t match. client: ' + clientToken + ', server: ' + _this4.token + '.\n                     For most case, this is caused by older app retrying connection to the server. Ignore it.');
+                    socket.end();
+                }
+            });
+        }
+
+        /**
+         * add a client socket
+         * @param {net.Socket} socket
+         */
+
+    }, {
+        key: 'addClient',
+        value: function addClient(socket) {
+            if (this.client) {
+                ____('New connection, Overwrite existing connection.');
+                if (this.client.writable) {
+                    this.client.end();
+                }
+            } else {
+                ____('New connection. Set client.');
+            }
+            socket.on('data', this.onData.bind(this));
+            this.client = socket;
+            this.send({ event: 'connected' });
+        }
+
+        /**
+         * send payload to the client
+         * @param {object} [payload={}]
+         */
+
+    }, {
+        key: 'send',
+        value: function send() {
+            var payload = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+            if (!this.client) {
+                return ____('sending message suppressed: No client.');
+            }
+            if (!this.client.writable) {
+                this.client = null;
+                return ____('sending message suppressed: Socket is not writable.');
+            }
+
+            ____('sending payload: ' + JSON.stringify(payload) + '\n');
+            // as payloads are sometimes joined with previous one, the client should split them with "\n" separator
+            // (see src/titanium/socket.js)
+            this.client.write(JSON.stringify(payload) + '\n');
+        }
+
+        /**
+         * Called when data comes from client
+         * Split into multiple payloads
+         * @param {string} chunk
+         */
+
+    }, {
+        key: 'onData',
+        value: function onData(chunk) {
+            this.received += chunk;
+            var payloads = this.received.split('\n');
+            this.received = payloads.pop();
+
+            payloads.map(JSON.parse).forEach(this.readPayload.bind(this));
+        }
+
+        /**
+         * read payload sent by client
+         * @param {Object} payload
+         */
+
+    }, {
+        key: 'readPayload',
+        value: function readPayload(payload) {
+
+            switch (payload.type) {
+                case 'log':
+                    this.emit('log', payload);
+                    break;
+                default:
+                    // console.log(payload)
+                    break;
+            }
+        }
+    }, {
+        key: 'connected',
+        get: function get() {
+            return !!(this.client && this.client.writable);
+        }
+    }]);
+
+    return NotificationServer;
+}(_events.EventEmitter);
+
+exports.default = NotificationServer;
