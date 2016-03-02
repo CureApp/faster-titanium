@@ -70,7 +70,8 @@
     "power-assert": "^1.2.0",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
-    "titanium": "^5.0.6"
+    "titanium": "^5.0.6",
+    "whatwg-fetch": "^0.11.0"
   },
   "node-circleci-autorelease": {
     "machine": {
