@@ -1,6 +1,7 @@
 const gulp = require('gulp')
 const gutil = require('gulp-util')
 const babel = require('gulp-babel')
+const plumber = require('gulp-plumber')
 const browserify = require('browserify')
 const dirname = require('path').dirname
 const source = require('vinyl-source-stream')
@@ -53,6 +54,7 @@ gulp.task('babel:all', x => {
 gulp.task('browserify:ti', x => {
     return browserify('dist/titanium/faster-titanium.js')
         .bundle()
+        .pipe(plumber())
         .pipe(source('faster-titanium.bundle.js'))
         .pipe(gulp.dest('dist/titanium'))
 })
@@ -63,6 +65,7 @@ gulp.task('browserify:ti', x => {
 gulp.task('browserify:web', x => {
     return browserify('dist/web/main.js')
         .bundle()
+        .pipe(plumber())
         .pipe(source('main.bundle.js'))
         .pipe(gulp.dest('dist/web'))
 })
@@ -84,6 +87,7 @@ function isSubDir(relpath, dirs) {
  */
 function compileBabel(src, dest) {
     return gulp.src(src)
+        .pipe(plumber())
         .pipe(babel())
         .pipe(gulp.dest(dest))
 }
