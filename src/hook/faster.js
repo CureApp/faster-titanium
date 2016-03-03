@@ -180,7 +180,7 @@ export function generateNewAppJS(fPort, nPort, host, token) {
  * start watching files
  */
 export function startWatching() {
-    this.ftProcess.watch()
+    this.ftProcess.run()
 }
 
 

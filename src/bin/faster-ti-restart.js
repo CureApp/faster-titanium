@@ -46,7 +46,7 @@ function run() {
     const ftProcess = new MainProcess(absProjDir, opts)
 
     ftProcess.launchServers()
-    ftProcess.watch()
+    ftProcess.run()
     log(`FasterTitanium successfully launched.`, 'green')
     log(`\thttp server url: ${ftProcess.url}`, 'green')
     log(`\tproject dir: ${ftProcess.projDir}`, 'green')

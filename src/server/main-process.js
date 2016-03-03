@@ -58,11 +58,6 @@ export default class MainProcess {
         /** @type {AlloyCompiler} */
         this.alloyCompiler = new AlloyCompiler(this.projDir, this.platform)
         this.registerListeners()
-
-        process.on('exit', x => {
-            console.log(chalk.yellow(`You can restart faster-titanium server with the following command.\n`))
-            console.log(chalk.yellow(this.restartCommand))
-        })
     }
 
     /** @type {string} */
@@ -99,7 +94,14 @@ export default class MainProcess {
         this.nServer.on('log', ::this.tilog)
         this.watcher.on('change:Resources', ::this.onResourceFileChanged)
         this.watcher.on('change:alloy', ::this.onAlloyFileChanged)
+
     }
+
+    get running() {
+        return this.fServer.running && this.nServer.running && this.watcher.watching
+
+    }
+
 
 
     /**
@@ -115,10 +117,22 @@ export default class MainProcess {
         ]).catch(___x)
     }
 
+    /**
+     * start watching files
+     * @public
+     */
+    run() {
+        this.watch()
+        process.on('exit', x => {
+            console.log(chalk.yellow(`You can restart faster-titanium server with the following command.\n`))
+            console.log(chalk.yellow(this.restartCommand))
+        })
+    }
+
 
     /**
      * starting file watching
-     * @public
+     * @private
      */
     watch() {
         ____(`starting file watcher`)

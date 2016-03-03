@@ -40,6 +40,10 @@ export default class FileWatcher extends EventEmitter {
         this.watcher.add(this.dirs)
     }
 
+    get watching() {
+        return Object.keys(this.watcher.getWatched()).length > 0
+    }
+
 
     /**
      * whether the last change event was emitted during the past 1000msec

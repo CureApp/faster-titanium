@@ -44,6 +44,10 @@ export default class FileServer extends EventEmitter {
         this.server.on('connection', socket => this.sockets.push(socket))
     }
 
+    get running() {
+        return this.server.listening
+    }
+
 
     /**
      * listen

@@ -34,6 +34,10 @@ export default class NotificationServer extends EventEmitter {
     }
 
 
+    get running() {
+        return this.server.listening
+    }
+
     /**
      * listen
      * @public
