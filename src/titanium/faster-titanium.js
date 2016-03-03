@@ -229,6 +229,7 @@ export default class FasterTitanium {
         const { timer = 0, force = false } = options
 
         this.willReload++
+        if (timer) ____(`App will be reloaded in ${timer}ms...`, 'debug')
 
         setTimeout(x => {
             this.willReload--

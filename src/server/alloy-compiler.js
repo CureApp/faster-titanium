@@ -7,6 +7,7 @@ import optimizeAlloy from './optimize-alloy'
 const alloyPath = resolve(__dirname, '../../node_modules/.bin/alloy')
 const P = f => new Promise(f)
 const ____ = debug('faster-titanium:AlloyCompiler')
+const ___x = debug('faster-titanium:AlloyCompiler:error')
 const ___o = v => ____(v) || v
 const wait = (msec => new Promise(y => setTimeout(y, msec)))
 
@@ -24,6 +25,8 @@ export default class AlloyCompiler {
         this.projDir = projDir
         this.platform = platform
         this.acState = new AlloyCompilationState(false) // false: timeout = false
+        this.suppressAlloyLog()
+        this.suppressAlloyDeath()
     }
 
     /** @type {string} */
@@ -48,6 +51,23 @@ export default class AlloyCompiler {
     get compiling() {
         return this.acState.compiling
     }
+
+    /**
+     * suppress normal log in alloy compilation
+     */
+    suppressAlloyLog() {
+        const alloyLogger = require('alloy/Alloy/logger')
+        alloyLogger.logLevel = alloyLogger.WARN
+    }
+
+    /**
+     * suppress process being killed
+     */
+    suppressAlloyDeath() {
+        const alloyUtils = require('alloy/Alloy/utils');
+        alloyUtils.die = (str) => { throw new Error(str) }
+    }
+
 
     /**
      * @param {string} path
@@ -114,11 +134,13 @@ export default class AlloyCompiler {
      */
     compileFiles(path) {
         const relPath = relative(this.projDir, path)
+        ____(`Start compilation: ${relPath}.`)
         try {
             require('alloy/Alloy/commands/compile/index')([], {config: `platform=${this.platform},file=${relPath}`})
             return Promise.resolve()
         }
         catch (e) {
+            ___x(e)
             return Promise.reject(e)
         }
     }

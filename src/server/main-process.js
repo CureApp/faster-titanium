@@ -193,7 +193,7 @@ export default class MainProcess {
             this.send({event: 'alloy-compilation-done', token, success: result})
             this.watcher.removeListener('change:Resources', poolChanged)
             if (result) {
-                this.sendEvent({names: changedFiles})
+                this.sendEvent({timer: 500, names: changedFiles})
             }
         })
     }
