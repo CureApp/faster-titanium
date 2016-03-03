@@ -4,6 +4,7 @@ import Socket from './socket'
 import RequireAgent from './require-agent'
 import AlloyCompilationState from '../common/alloy-compilation-state'
 import Http from './http'
+import AlertDialogReplacer from './alert-dialog-replacer'
 
 import Logger from './logger'
 const ____ = Logger.debug('FasterTitanium')
@@ -20,6 +21,7 @@ export default class FasterTitanium {
      * @param {string} [options.host='localhost'] host hostname of the servers
      */
     static run(g, options) {
+        AlertDialogReplacer.init()
         Logger.init()
         const ft = new FasterTitanium(g, options)
         FasterTitanium.instance = ft
@@ -229,14 +231,14 @@ export default class FasterTitanium {
         const { timer = 0, force = false } = options
 
         this.willReload++
-        if (timer) ____(`App will be reloaded in ${timer}ms...`, 'debug')
 
-        setTimeout(x => {
+        AlertDialogReplacer.hide(x => { // hides alert dialogs before restart. Then the given callback is executed.
             this.willReload--
 
             if ((this.acState.compiling || this.willReload > 0) && !force) {
                 return ____(`Reload suppressed because ongoing alloy compilations exist. Use web reload button to force reloading: ${this.url}`)
             }
+
 
             this.socket.end()
 

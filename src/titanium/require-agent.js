@@ -1,6 +1,7 @@
 
 import Module from './module'
 import Http from './http'
+import AlertDialogReplacer from './alert-dialog-replacer'
 
 import Logger from './logger'
 const ____ = Logger.debug('FasterTitanium:RequireAgent')
@@ -94,8 +95,20 @@ export default class RequireAgent {
     createModule(moduleName, source) {
         const mod = new Module(moduleName)
 
-        const fn = Function('exports, require, module, __dirname, __filename', source)
-        fn(mod.exports, (v => this.requireRaw(v, mod)), mod, mod.__dirname, mod.__filename)
+        // global variables in the source
+        const variables = {
+            exports    : mod.exports,
+            require    : v => this.requireRaw(v, mod),
+            module     : mod,
+            __dirname  : mod.__dirname,
+            __filename : mod.__filename,
+            alert      : AlertDialogReplacer.alert
+        }
+
+        var varNames  = Object.keys(variables).join(',')
+        var varValues = Object.keys(variables).map(k => variables[k])
+
+        Function(varNames, source).apply(null, varValues)
 
         return mod
     }
