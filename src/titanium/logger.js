@@ -1,6 +1,3 @@
-
-const firstLoaded = new Date().getTime()
-
 /**
  * Singleton class. Class itself has states.
  */
