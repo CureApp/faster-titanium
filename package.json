@@ -1,6 +1,6 @@
 {
   "name": "faster-titanium",
-  "version": "1.7.3",
+  "version": "1.7.4",
   "description": "Accelerate Titanium development",
   "license": "MIT",
   "main": "index.js",
