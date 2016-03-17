@@ -2,6 +2,7 @@
 const noop = () => {}
 
 global.Ti = {
+    UI: {},
     API: {
         trace: console.log,
         debug: console.log,
