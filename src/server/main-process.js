@@ -10,7 +10,7 @@ import ContentResponder from './content-responder'
 import AlloyCompiler from './alloy-compiler'
 import Preferences from '../common/preferences'
 import TiLog from './ti-log'
-import { isAppJS, modNameByPath } from '../common/util'
+import { modNameByPath } from '../common/util'
 
 const ____ = debug('faster-titanium:MainProcess')
 const ___x = (e) =>

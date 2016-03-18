@@ -4,6 +4,7 @@ import 'alloy/Alloy/common/constants' // it must be imported before alloy/platfo
 import platforms from 'alloy/platforms/index' // TODO: prepare original object
 
 const folderNames = Object.keys(platforms).map(p => platforms[p].titaniumFolder)
+folderNames.push('') // for Resources/app.js
 /**
  * @param {string} projectDir absolute path to the titanium project directory
  * @param {string} path absolute path to the path in Resources
