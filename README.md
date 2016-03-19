@@ -25,6 +25,12 @@ Live a happier Titanium life!
 $ npm install -g faster-titanium
 ```
 
+If you install with `sudo` and get the error `Unable to write config file...` use the following command: 
+
+```
+$ npm install -g faster-titanium --unsafe-perm
+```
+
 That's all.
 
 Note that your Node.js has to be greater than v0.12.
