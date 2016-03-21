@@ -1,0 +1,287 @@
+{
+  "coverage": "62.27%",
+  "expectCount": 273,
+  "actualCount": 170,
+  "files": {
+    "src/titanium/alert-dialog-replacer.js": {
+      "expectCount": 6,
+      "actualCount": 5,
+      "undocumentLines": [
+        13
+      ]
+    },
+    "src/common/alloy-compilation-state.js": {
+      "expectCount": 7,
+      "actualCount": 4,
+      "undocumentLines": [
+        8,
+        13,
+        12
+      ]
+    },
+    "src/server/alloy-compiler.js": {
+      "expectCount": 12,
+      "actualCount": 10,
+      "undocumentLines": [
+        27,
+        26
+      ]
+    },
+    "src/server/app-js-converter.js": {
+      "expectCount": 5,
+      "actualCount": 5,
+      "undocumentLines": []
+    },
+    "src/web/components/connection-hint-modal.js": {
+      "expectCount": 5,
+      "actualCount": 1,
+      "undocumentLines": [
+        74,
+        43,
+        63,
+        48
+      ]
+    },
+    "src/server/content-responder.js": {
+      "expectCount": 13,
+      "actualCount": 11,
+      "undocumentLines": [
+        16,
+        15
+      ]
+    },
+    "src/titanium/faster-titanium.js": {
+      "expectCount": 21,
+      "actualCount": 20,
+      "undocumentLines": [
+        13
+      ]
+    },
+    "src/server/file-server.js": {
+      "expectCount": 11,
+      "actualCount": 10,
+      "undocumentLines": [
+        47
+      ]
+    },
+    "src/server/file-watcher.js": {
+      "expectCount": 13,
+      "actualCount": 11,
+      "undocumentLines": [
+        88,
+        43
+      ]
+    },
+    "src/web/components/fa.js": {
+      "expectCount": 5,
+      "actualCount": 0,
+      "undocumentLines": [
+        2,
+        9,
+        4,
+        14,
+        6
+      ]
+    },
+    "src/web/global-state.js": {
+      "expectCount": 7,
+      "actualCount": 2,
+      "undocumentLines": [
+        16,
+        8,
+        17,
+        12,
+        18
+      ]
+    },
+    "src/titanium/http.js": {
+      "expectCount": 2,
+      "actualCount": 0,
+      "undocumentLines": [
+        2,
+        4
+      ]
+    },
+    "src/web/components/info-table.js": {
+      "expectCount": 10,
+      "actualCount": 2,
+      "undocumentLines": [
+        7,
+        9,
+        38,
+        16,
+        107,
+        111,
+        11,
+        30
+      ]
+    },
+    "src/titanium/logger.js": {
+      "expectCount": 17,
+      "actualCount": 5,
+      "undocumentLines": [
+        15,
+        16,
+        11,
+        7,
+        12,
+        47,
+        9,
+        13,
+        86,
+        21,
+        55,
+        8
+      ]
+    },
+    "src/server/main-process.js": {
+      "expectCount": 23,
+      "actualCount": 22,
+      "undocumentLines": [
+        100
+      ]
+    },
+    "src/titanium/module.js": {
+      "expectCount": 4,
+      "actualCount": 3,
+      "undocumentLines": [
+        7
+      ]
+    },
+    "src/server/notification-server.js": {
+      "expectCount": 16,
+      "actualCount": 11,
+      "undocumentLines": [
+        23,
+        21,
+        37,
+        24,
+        22
+      ]
+    },
+    "src/common/preferences.js": {
+      "expectCount": 12,
+      "actualCount": 4,
+      "undocumentLines": [
+        7,
+        47,
+        34,
+        25,
+        17,
+        9,
+        60,
+        55
+      ]
+    },
+    "src/titanium/require-agent.js": {
+      "expectCount": 14,
+      "actualCount": 13,
+      "undocumentLines": [
+        9
+      ]
+    },
+    "src/server/resource-loader.js": {
+      "expectCount": 10,
+      "actualCount": 7,
+      "undocumentLines": [
+        48,
+        36,
+        44
+      ]
+    },
+    "src/server/response-info.js": {
+      "expectCount": 5,
+      "actualCount": 1,
+      "undocumentLines": [
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "src/web/components/root.js": {
+      "expectCount": 7,
+      "actualCount": 0,
+      "undocumentLines": [
+        8,
+        23,
+        10,
+        28,
+        51,
+        37,
+        12
+      ]
+    },
+    "src/web/components/selection-modal.js": {
+      "expectCount": 7,
+      "actualCount": 2,
+      "undocumentLines": [
+        104,
+        51,
+        60,
+        96,
+        53
+      ]
+    },
+    "src/titanium/socket.js": {
+      "expectCount": 20,
+      "actualCount": 11,
+      "undocumentLines": [
+        3,
+        110,
+        51,
+        5,
+        11,
+        12,
+        9,
+        10,
+        13
+      ]
+    },
+    "src/server/ti-log.js": {
+      "expectCount": 8,
+      "actualCount": 1,
+      "undocumentLines": [
+        31,
+        19,
+        27,
+        11,
+        7,
+        23,
+        15
+      ]
+    },
+    "src/hook/faster.js": {
+      "expectCount": 7,
+      "actualCount": 7,
+      "undocumentLines": []
+    },
+    "src/common/util.js": {
+      "expectCount": 3,
+      "actualCount": 1,
+      "undocumentLines": [
+        23,
+        31
+      ]
+    },
+    "src/server/optimize-alloy.js": {
+      "expectCount": 1,
+      "actualCount": 1,
+      "undocumentLines": []
+    },
+    "src/web/post-preferences.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        2
+      ]
+    },
+    "src/bin/faster-ti-restart.js": {
+      "expectCount": 1,
+      "actualCount": 0,
+      "undocumentLines": [
+        58
+      ]
+    }
+  }
+}
