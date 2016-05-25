@@ -47,8 +47,8 @@
     "openport": "0.0.4",
     "randomstring": "^1.1.4",
     "semver": "^5.1.0",
-    "shelljs": "^0.6.0",
-    "uglify-js": "2.4.15"
+    "shelljs": "^0.7.0",
+    "uglify-js": "2.6.2"
   },
   "devDependencies": {
     "babel-cli": "^6.5.1",
@@ -67,11 +67,11 @@
     "mocha": "^2.4.5",
     "node-circleci-autorelease": "^1.5.11",
     "power-assert": "^1.2.0",
-    "react": "^0.14.7",
-    "react-dom": "^0.14.7",
+    "react": "^15.1.0",
+    "react-dom": "^15.1.0",
     "titanium": "^5.0.6",
     "vinyl-source-stream": "^1.1.0",
-    "whatwg-fetch": "^0.11.0"
+    "whatwg-fetch": "^1.0.0"
   },
   "node-circleci-autorelease": {
     "machine": {
