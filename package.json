@@ -47,7 +47,7 @@
     "openport": "0.0.4",
     "randomstring": "^1.1.4",
     "semver": "^5.1.0",
-    "shelljs": "^0.6.0",
+    "shelljs": "^0.7.2",
     "uglify-js": "2.4.15"
   },
   "devDependencies": {
