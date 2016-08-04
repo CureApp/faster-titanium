@@ -64,7 +64,7 @@
     "gulp-babel": "^6.1.2",
     "gulp-plumber": "^1.1.0",
     "gulp-util": "^3.0.7",
-    "mocha": "^2.4.5",
+    "mocha": "^3.0.1",
     "node-circleci-autorelease": "^1.5.11",
     "power-assert": "^1.2.0",
     "react": "^0.14.7",
