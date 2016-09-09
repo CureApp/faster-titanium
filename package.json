@@ -39,7 +39,7 @@
   "preferGlobal": true,
   "dependencies": {
     "acorn": "^3.0.2",
-    "alloy": ">=1.7",
+    "alloy": ">=1.9.2",
     "chalk": "^1.1.1",
     "chokidar": "^1.4.2",
     "commander": "^2.9.0",
