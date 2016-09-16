@@ -38,7 +38,7 @@
   },
   "preferGlobal": true,
   "dependencies": {
-    "acorn": "^3.0.2",
+    "acorn": "^4.0.3",
     "alloy": ">=1.7",
     "chalk": "^1.1.1",
     "chokidar": "^1.4.2",
